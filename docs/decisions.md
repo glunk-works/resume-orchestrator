@@ -341,8 +341,8 @@ until the reviewer App posts a fresh-session review that passes on its current h
 - **The `release` environment:** it admits only `main` and requires `Seuss27`'s review
   (`RO-D18`). The cutover also requires that `Seuss27` is the only required reviewer and that
   admins cannot bypass it. GitHub's default lets admins bypass, so the cutover may change this
-  setting. The cutover PR's body records the read-back, and this entry is amended before that PR
-  merges if a change was made.
+  setting. If it does, the change is made before the cutover PR is published, and this entry
+  says so.
 
 Consequences:
 - Readers trust by id, not by `author_association`.
@@ -379,7 +379,7 @@ Residuals:
   every entry as inconclusive, or as missing when it cannot find the name. So
   `/way-of-working:resume` running as `glunk-dev` gets no ruleset signal. The daily `ruleset-drift`
   workflow sees only rule types, checks and their pins, pooled across rulesets. Because the
-  approval ruleset's rule types are all carried by `main-required-checks` too, deleting or
-  disabling the approval ruleset goes unseen by that workflow.
+  approval ruleset's rule types are all carried by `main-required-checks` too, deleting the
+  approval ruleset, or moving it off `active` enforcement, goes unseen by that workflow.
 - `docs/` and the other rule-4 paths outside `code_paths` rest on the approval and the critic pass
   alone.
