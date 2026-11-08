@@ -390,11 +390,13 @@ Residuals:
   the `--perms` passed to `wow-admin` keeps them off a minted token.
   - With Administration a token could edit or delete either ruleset or add a bypass actor to it,
     which defeats the required check and the code owner's approval. The daily `ruleset-drift`
-    workflow sees none of a bypass actor, an edit to the approval rule or its deletion (below).
-    It could also change the `release` environment's reviewers, admin bypass or main-only branch
-    policy, which `RO-D18` and this entry's `release` bullet rely on. And it could add a
-    collaborator or a deploy key, a write path that outlives the token, so after each token the
-    maintainer re-lists the repo's write paths: collaborators, deploy keys and App installations.
+    workflow sees none of a bypass actor, an edit to either ruleset's `pull_request` rule, or the
+    approval ruleset's deletion or move off `active` enforcement (below). It could also change the
+    `release` environment's reviewers, admin bypass or main-only branch policy, which `RO-D18` and
+    this entry's `release` bullet rely on. And it could invite a collaborator, grant a team access
+    or add a deploy key, write paths that outlive the token. So after each token the maintainer
+    re-lists the repo's write paths: collaborators, pending invitations, teams, deploy keys and
+    App installations.
   - With Environments it could change that environment's secrets or variables, which `release.yml`
     reads.
   - With Actions it could dispatch `release.yml`, still gated by that environment's review, or
