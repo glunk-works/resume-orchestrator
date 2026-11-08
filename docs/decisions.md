@@ -332,13 +332,16 @@ until the reviewer App posts a fresh-session review that passes on its current h
   `workflows` write. No dev or review container runs while that token is live. Every other
   dev-workflow session runs in a dev container.
 - **Ordinary PRs wait:** between the cutover merge and the dev App's installation (below), no
-  identity may open an ordinary PR: `Seuss27` is barred, and `glunk-admin[bot]` opens workflow
-  PRs only. #115 is itself a workflow PR, so it is the first PR after the cutover.
+  dev-workflow identity may open an ordinary PR: `Seuss27` is barred, and `glunk-admin[bot]` opens
+  workflow PRs only. Dependabot keeps opening its own, and a gated one waits for the check to be
+  required and a fresh gate run. #115 is itself a workflow PR, so it is the first
+  dev-workflow PR after the cutover.
 - **Order:** the second GitHub account's write access is removed before the cutover PR merges. The dev
   App is installed, and the repo added to the token broker, only after the check is required and
-  #115's PR has merged. The reviewer App is installed on this repo before the cutover PR merges, and
-  the dev App's registration holds no Workflows and no Administration permission. That is later than `reference/cutover.md` requires, and it means no `glunk-dev`
-  session can touch the cutover PR.
+  #115's PR has merged. That is later than `reference/cutover.md` requires, and it means no
+  `glunk-dev` session can touch the cutover PR. The reviewer App is installed on this repo before
+  the cutover PR merges, and the dev App's registration holds no Workflows and no Administration
+  permission.
 - **The gate job takes no checkout:** it holds `statuses: write`, so it checks out no ref and
   runs no local action or repo script. That goes further than `reference/cutover.md`, which names
   those only as a limit of the integration pin.
@@ -373,14 +376,19 @@ Residuals:
   or `id-token` write for its own job. That workflow could post the `architect-review` context,
   push as `github-actions[bot]`, or mint OIDC tokens and attestations under this repo. The code
   owner's approval bounds only what merges. A short-lived token, revoked after use, with no dev or
-  review container running meanwhile, bounds the rest, except for a workflow PR itself: its own
+  review container running meanwhile, bounds the rest, with two exceptions. A workflow PR's own
   workflows run on `pull_request`, so it can post `architect-review` (for instance from a job of
   that name with no permissions), and the edited workflow keeps posting after the token is revoked.
   On a PR that adds or edits a workflow, `architect-review` is therefore not evidence of a review:
-  before approving, the maintainer confirms the `glunk-review[bot]` review on the head.
+  before approving, the maintainer confirms the `glunk-review[bot]` review on the head. The other
+  exception is a branch the token pushed: a workflow on it keeps firing on later pushes, so those
+  branches are deleted, or checked for stray workflows, before any dev container runs again.
 - The `glunk-admin` installation itself holds Administration, Environments and Actions write. Only
-  the `--perms` passed to `wow-admin` keeps them off a minted token. With Environments a token could
-  change the `release` environment's reviewers or admin bypass, which `RO-D18` relies on.
+  the `--perms` passed to `wow-admin` keeps them off a minted token. With Administration or
+  Environments a token could change the `release` environment's reviewers, admin bypass, secrets or
+  variables, which `RO-D18` and this entry's `release` bullet rely on. With Actions it could
+  dispatch `release.yml`, still gated by that environment's review, or disable the daily
+  `ruleset-drift` workflow.
 - No automated check reads the approval rule's parameters; only the manual read-back by id does.
   Run by a repo admin, `ruleset-drift.sh` reports, per ruleset, the missing types and checks,
   whether a `pull_request` rule applies, and the bypass-actor count. Run by anyone else, it reports

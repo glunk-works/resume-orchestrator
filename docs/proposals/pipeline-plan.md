@@ -1024,7 +1024,8 @@ the maintainer approves it. That approval also confirms the RO-D wording.
   code owner's approval in front of `main` (#88, `RO-D21`). Moving dev-workflow sessions into dev
   containers is #115's. *Done when:* a PR that touches `code_paths` reads red until a passing review is
   on its head, a PR outside the triggers reads green, and `ruleset-drift.sh` reports no missing
-  checks.
+  checks. The clause on a PR outside the triggers is shown by the first `glunk-dev[bot]` PR, which
+  only follows #115 (`RO-D21`).
 
 ### Sprints
 
