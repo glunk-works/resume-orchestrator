@@ -340,9 +340,8 @@ until the reviewer App posts a fresh-session review that passes on its current h
   those only as a limit of the integration pin.
 - **The `release` environment:** it admits only `main` and requires `Seuss27`'s review
   (`RO-D18`). The cutover also requires that `Seuss27` is the only required reviewer and that
-  admins cannot bypass it. GitHub's default lets admins bypass, so the cutover may change this
-  setting. If it does, the change is made before the cutover PR is published, and this entry
-  says so.
+  admins cannot bypass it. GitHub's default lets admins bypass, so the cutover changed this
+  setting: `can_admins_bypass` was turned off on 2026-11-07, before the cutover PR is published.
 
 Consequences:
 - Readers trust by id, not by `author_association`.
