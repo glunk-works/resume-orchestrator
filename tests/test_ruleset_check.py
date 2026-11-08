@@ -72,7 +72,11 @@ def test_fails_naming_a_missing_rule_type() -> None:
 def test_missing_items_are_found_in_a_rulesets_entry_alone() -> None:
     project = copy.deepcopy(PROJECT)
     project["rulesets"].append(
-        {"name": "x", "rule_types": ["creation"], "required_checks": ["other"]}
+        {
+            "name": "x",
+            "rule_types": ["creation", "required_status_checks"],
+            "required_checks": ["other"],
+        }
     )
     problems = check_ruleset.check(_rules(CHECKS), project)
     assert any(p.startswith("rulesets[1]: missing rule type creation") for p in problems)
@@ -215,6 +219,54 @@ def test_fails_closed_on_bad_rules(rules: Any) -> None:
         check_ruleset.check(rules, PROJECT)
 
 
+APPROVAL: dict[str, Any] = {
+    "name": "approval",
+    "source": "repo",
+    "rule_types": ["deletion", "non_fast_forward", "pull_request"],
+}
+
+
+def _with_approval(**extra: Any) -> dict[str, Any]:
+    project = copy.deepcopy(PROJECT)
+    project["rulesets"].append({**copy.deepcopy(APPROVAL), **extra})
+    return project
+
+
+@pytest.mark.parametrize("extra", [{}, {"required_checks": None}, {"check_integrations": None}])
+def test_an_approval_entry_may_omit_or_null_its_checks(extra: dict[str, Any]) -> None:
+    assert check_ruleset.check(_rules(CHECKS), _with_approval(**extra)) == []
+
+
+@pytest.mark.parametrize("key", ["required_checks", "check_integrations"])
+@pytest.mark.parametrize("value", [[], ["lint"], {}, {"lint": 15368}, "lint", True, 0])
+def test_an_approval_entry_with_any_other_check_value_fails_closed(key: str, value: Any) -> None:
+    with pytest.raises(check_ruleset.ShapeError):
+        check_ruleset.check(_rules(CHECKS), _with_approval(**{key: value}))
+
+
+def test_an_approval_entry_is_not_compared_for_checks() -> None:
+    problems = check_ruleset.check(_rules(["lint"]), _with_approval())
+    assert problems
+    assert all(p.startswith(("ruleset:", "rulesets[0]:")) for p in problems)
+
+
+def test_an_approval_entrys_missing_rule_types_are_reported() -> None:
+    rules = _rules(CHECKS, ["deletion", "non_fast_forward"])
+    project = copy.deepcopy(PROJECT)
+    project["ruleset"]["rule_types"] = ["deletion"]
+    project["rulesets"][0]["rule_types"] = ["deletion", "required_status_checks"]
+    project["rulesets"].append(copy.deepcopy(APPROVAL))
+    problems = check_ruleset.check(rules, project)
+    assert problems == ["rulesets[1]: missing rule type pull_request"]
+
+
+def test_a_rulesets_entry_with_status_checks_still_needs_them_declared() -> None:
+    project = _with_approval()
+    project["rulesets"][1]["rule_types"].append("required_status_checks")
+    with pytest.raises(check_ruleset.ShapeError):
+        check_ruleset.check(_rules(CHECKS), project)
+
+
 def _run(tmp_path: Path, rules: str, project: str) -> subprocess.CompletedProcess[str]:
     rules_file = tmp_path / "rules.json"
     project_file = tmp_path / "project.json"
@@ -244,3 +296,11 @@ def test_script_without_arguments_exits_two() -> None:
         [sys.executable, "-I", str(SCRIPT)], capture_output=True, text=True, check=False
     )
     assert result.returncode == 2
+
+
+def test_the_ruleset_block_needs_checks_even_without_the_status_check_rule_type() -> None:
+    project = copy.deepcopy(PROJECT)
+    project["ruleset"]["rule_types"] = ["deletion"]
+    del project["ruleset"]["required_checks"]
+    with pytest.raises(check_ruleset.ShapeError, match="ruleset declares no required_checks"):
+        check_ruleset.check(_rules(CHECKS), project)

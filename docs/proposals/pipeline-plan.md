@@ -749,8 +749,9 @@ the maintainer approves it. That approval also confirms the RO-D wording.
   - **`pr-title` workflow:** checks the Conventional Commits grammar with a 72-character limit,
     on its own `pull_request` trigger that includes `edited`. The title reaches the shell
     through `env:`.
-  - **`ruleset-drift` workflow:** a daily scheduled check that `main-required-checks` still
-    holds.
+  - **`ruleset-drift` workflow:** a daily scheduled check that every declared ruleset entry, not
+    only `main-required-checks`, still has its rule types, checks and pins carried, pooled across
+    rulesets rather than matched by id (`RO-D21` records what that leaves unseen).
   - **Workflow hygiene:** every action is pinned by commit SHA with a version comment. A
     workflow has a top-level `permissions` of at most `contents: read` and sets
     `persist-credentials: false` on every checkout; the secrets-scan caller has no checkout of its own.
@@ -1020,6 +1021,12 @@ the maintainer approves it. That approval also confirms the RO-D wording.
   checks, and `/way-of-working:resume` runs in this repo.
 - **F6 — Transfer.** The maintainer transfers the repo to `glunk-works` and renames it
   `resume-orchestrator` in the same step (`RO-D19`).
+- **F7 — Review gate cutover.** Declares identities, puts the fresh-session review gate and the
+  code owner's approval in front of `main` (#88, `RO-D21`). Moving dev-workflow sessions into dev
+  containers is #115's. *Done when:* a PR that touches `code_paths` reads red until a passing review is
+  on its head, a PR outside the triggers reads green, and `ruleset-drift.sh` reports no missing
+  checks. The clause on a PR outside the triggers is shown by the first `glunk-dev[bot]` PR outside
+  the triggers, which can only follow #115 (`RO-D21`).
 
 ### Sprints
 
@@ -1032,7 +1039,7 @@ issue is the single list of the maintainer's follow-ups.
 | Sprint (milestone) | Tasks | Delivers |
 |---|---|---|
 | S01 — Stop the data loss, quick wins | F5, A1, A2, A3, B1, maintainer prerequisites | the session protocol, then better output from today's path |
-| S02 — Foundation and de-risk | B2, B3, B8, F6, B4, B5, B6, B7 | packaging, glunk-works CI and security tooling, the transfer, credentials, the `claude -p` verdict |
+| S02 — Foundation and de-risk | B2, B3, B8, F6, B4, B5, B6, B7, F7 | packaging, glunk-works CI and security tooling, the transfer, credentials, the `claude -p` verdict, the review gate |
 | S03 — Ledger core | C1a, C1b, C2, C3 | the private ledger, imported |
 | S04 — Grow the ledger | C4a, C5a, C6, A4 | the legacy path reads a grown ledger |
 | S05 — Engine runtime and checks | D1 (absorbs #8), D2, D3 | role runtime and claim policy |
@@ -1053,7 +1060,8 @@ The maintainer prerequisites issue in S01 covers:
 
 - **Phase A:** A1 first, then A2 and A3 in parallel, then A4.
 - **B and C1a/C1b:** B1–B5 and B7 run in parallel with C1a. B8 needs B3. C1b needs C1a and
-  B5. B6 precedes D1. F6 follows B8.
+  B5. B6 precedes D1. F6 follows B8. F7 follows F6 and #113 (the uv move), and waits on
+  glunk-works/claude-workbench#1349.
 - **C:** C2 needs C1b. C3 and C4a follow C2. C5a needs C3. C6 needs C5a, so the legacy path
   gains the grown ledger before Phase D. C4b needs D1, and C5b needs C4b.
 - **D:** D2 needs D1. D3 needs D2. D4 needs D1 and C4a. D5 comes after C1a and D2–D4. Then
@@ -1086,6 +1094,7 @@ The maintainer prerequisites issue in S01 covers:
     token) and send them out.
   - **What prevents it:** only that no run-time LLM holds a tool (`RO-D9`). The remaining
     control is the maintainer reading the final files and `review.html` before sending.
+    `RO-D21` records the dev-workflow version of this residual, for the review gate's cutover.
   - **What keeps the output consistent but doesn't stop such a process:** `--final`'s
     re-check against the remote head, forced-push CI, and the self-asserted `Change-Id:`/
     `Card-Id:` trailers.
