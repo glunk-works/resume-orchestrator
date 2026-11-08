@@ -393,16 +393,19 @@ Residuals:
     the `release` environment, whose reviewers, admin bypass and main-only branch policy `RO-D18`
     and this entry's `release` bullet rely on. And it could invite a collaborator, grant a team
     access or add a deploy key, write paths that outlive the token. The daily `ruleset-drift`
-    workflow sees little of this (below). So after each token the maintainer reads back everything
-    Administration can change: both rulesets by id (enforcement, target, rules, bypass actors),
-    the `release` environment's protection, and the repo's write paths: collaborators with their
-    permission levels, pending invitations, teams, deploy keys and App installations.
+    workflow sees none of the environment or write-path changes, and little of the ruleset ones
+    (below). So after each token the maintainer reads back what Administration can change,
+    including: both rulesets by id (enforcement, target, branch conditions, rules, bypass actors),
+    the `release` environment's protection, the default branch, the repo's Actions settings (the
+    default `GITHUB_TOKEN` permissions and who may approve a PR), and the repo's write paths:
+    collaborators with their permission levels, pending invitations, teams, deploy keys and App
+    installations.
   - With Environments it could change that environment's secrets or variables, which `release.yml`
     reads.
   - With Actions it could dispatch `release.yml`, still gated by that environment's review, or
     disable the daily `ruleset-drift` workflow.
-- No automated check reads either ruleset's rule parameters or bypass actors; only the manual
-  read-back by id does.
+- No automated check reads the `pull_request` rule's parameters or who a ruleset's bypass actors
+  are; only the manual read-back by id does.
   Run by a repo admin, `ruleset-drift.sh` reports, per ruleset, the missing types and checks,
   whether a `pull_request` rule applies, and the bypass-actor count. Run by anyone else, it reports
   every entry as inconclusive, or as missing when it cannot find the name. So
