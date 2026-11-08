@@ -349,7 +349,7 @@ until the reviewer App posts a fresh-session review that passes on its current h
 - **The `release` environment:** it admits only `main` and requires `Seuss27`'s review
   (`RO-D18`). The cutover also requires that `Seuss27` is the only required reviewer and that
   admins cannot bypass it. GitHub's default lets admins bypass, so the cutover changed this
-  setting: `can_admins_bypass` was turned off on 2026-11-07, before the cutover PR is published.
+  setting: `can_admins_bypass` was turned off on 2026-11-07, before the cutover PR was published.
 
 Consequences:
 - Readers trust by id, not by `author_association`.
@@ -388,22 +388,27 @@ Residuals:
   container runs again.
 - The `glunk-admin` installation itself holds Administration, Environments and Actions write. Only
   the `--perms` passed to `wow-admin` keeps them off a minted token.
-  - With Administration a token could change or delete either ruleset, or add a bypass actor to
-    it, which defeats the required check and the code owner's approval. It could change or delete
-    the `release` environment, whose reviewers, admin bypass and main-only branch policy `RO-D18`
-    and this entry's `release` bullet rely on. And it could invite a collaborator, grant a team
-    access or add a deploy key, write paths that outlive the token. The daily `ruleset-drift`
-    workflow sees none of the environment or write-path changes, and little of the ruleset ones
-    (below). So after each token the maintainer reads back what Administration can change,
-    including: both rulesets by id (enforcement, target, branch conditions, rules, bypass actors),
-    the `release` environment's protection, the default branch, the repo's Actions settings (the
-    default `GITHUB_TOKEN` permissions and who may approve a PR), and the repo's write paths:
+  - With Administration a token could change or delete any ruleset, or add a bypass actor to it.
+    On the branch rulesets that defeats the required check and the code owner's approval. On the
+    two tag rulesets of `RO-D18` it lets a token move, delete or create `v` tags. It could change
+    or delete the `release` environment, whose reviewers, admin bypass and main-only branch policy
+    `RO-D18` and this entry's `release` bullet rely on. It could invite a collaborator, grant a
+    team access or add a deploy key, write paths that outlive the token, and rename, transfer or
+    delete the repo. The daily `ruleset-drift` workflow sees none of the environment, write-path or
+    tag-ruleset changes, and little of the branch-ruleset ones (below). So after each token the
+    maintainer reads back what Administration can change, including: every ruleset that
+    `GET repos/glunk-works/resume-orchestrator/rulesets` lists, by id (enforcement, target, branch
+    or tag conditions, rules, bypass actors), the `release` environment's protection, the default
+    branch, the repo's name and owner, the repo's Actions settings (the default `GITHUB_TOKEN`
+    permissions, whether Actions may create or approve a PR, the allowed-actions policy and SHA
+    pinning, and the fork-PR approval policy), the auto-merge setting, and the repo's write paths:
     collaborators with their permission levels, pending invitations, teams, deploy keys and App
     installations.
   - With Environments it could change that environment's secrets or variables, which `release.yml`
     reads.
-  - With Actions it could dispatch `release.yml`, still gated by that environment's review, or
-    disable the daily `ruleset-drift` workflow.
+  - With Actions it could dispatch `release.yml`, still gated by that environment's review,
+    disable the daily `ruleset-drift` workflow, or delete workflow runs, logs and artifacts, which
+    are evidence of what a token did.
 - No automated check reads the `pull_request` rule's parameters or who a ruleset's bypass actors
   are; only the manual read-back by id does.
   Run by a repo admin, `ruleset-drift.sh` reports, per ruleset, the missing types and checks,
