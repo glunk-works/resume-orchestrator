@@ -296,3 +296,11 @@ def test_script_without_arguments_exits_two() -> None:
         [sys.executable, "-I", str(SCRIPT)], capture_output=True, text=True, check=False
     )
     assert result.returncode == 2
+
+
+def test_the_ruleset_block_needs_checks_even_without_the_status_check_rule_type() -> None:
+    project = copy.deepcopy(PROJECT)
+    project["ruleset"]["rule_types"] = ["deletion"]
+    project["ruleset"]["required_checks"] = []
+    with pytest.raises(check_ruleset.ShapeError):
+        check_ruleset.check(_rules(CHECKS), project)

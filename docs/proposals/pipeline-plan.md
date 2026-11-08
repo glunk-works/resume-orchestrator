@@ -1021,8 +1021,8 @@ the maintainer approves it. That approval also confirms the RO-D wording.
 - **F6 — Transfer.** The maintainer transfers the repo to `glunk-works` and renames it
   `resume-orchestrator` in the same step (`RO-D19`).
 - **F7 — Review gate cutover.** Declares identities, puts the fresh-session review gate and the
-  code owner's approval in front of `main`, and moves dev-workflow sessions into dev containers
-  (#88, `RO-D21`). *Done when:* a PR that touches `code_paths` reads red until a passing review is
+  code owner's approval in front of `main` (#88, `RO-D21`). Moving dev-workflow sessions into dev
+  containers is #115's. *Done when:* a PR that touches `code_paths` reads red until a passing review is
   on its head, a PR outside the triggers reads green, and `ruleset-drift.sh` reports no missing
   checks.
 

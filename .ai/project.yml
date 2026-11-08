@@ -7,9 +7,9 @@
 # mirrors its read-back by id. The identities ids come from `GET users/<slug>[bot]` and
 # `GET users/<login>`. The check names are the names GitHub reports for the required checks.
 #
-# Mirrored ahead of GitHub (RO-D21): `architect-review` with its pin, which the maintainer adds
-# after the merge. That order is reference/cutover.md's for a repo whose ruleset does not yet
-# require the check.
+# Mirrored ahead of GitHub: `architect-review` with its pin, which the maintainer adds after the
+# merge (#88). That order is reference/cutover.md's for a repo whose ruleset does not yet require
+# the check. Until then the daily ruleset-drift run reports it missing; that is expected, not drift.
 
 # ── identity ─────────────────────────────────────────────────────────────────
 repo: glunk-works/resume-orchestrator
