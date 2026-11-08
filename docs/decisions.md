@@ -321,8 +321,9 @@ until the reviewer App posts a fresh-session review that passes on its current h
   last-push approval. `.github/scripts/check_ruleset.py` accepts an entry with no status checks.
 - **Who opens and who approves:** the only code owner is `Seuss27`, and GitHub does not let an
   author approve their own PR, and the approval ruleset's last-push rule refuses an approval from
-  whoever pushed last. So `Seuss27` opens no PR after the cutover. `glunk-dev[bot]` opens every ordinary PR, Dependabot its own, and `glunk-admin[bot]`
-  every PR that adds, edits or deletes a workflow file. `Seuss27` approves and merges.
+  whoever pushed last. So `Seuss27` opens no PR after the cutover. `glunk-dev[bot]` opens every ordinary PR and
+  Dependabot its own. `glunk-admin[bot]` opens every other PR that adds, edits or deletes a
+  workflow file. `Seuss27` approves and merges.
 - **App commits:** the dev App publishes through the REST git data API with the plugin's
   `api-commit.sh`, so each commit is authored and committed by the App and signed by GitHub, and no
   `git push` from a container is needed. `main` does not require signed commits.
@@ -333,9 +334,9 @@ until the reviewer App posts a fresh-session review that passes on its current h
   dev-workflow session runs in a dev container.
 - **Ordinary PRs wait:** between the cutover merge and the dev App's installation (below), no
   dev-workflow identity may open an ordinary PR: `Seuss27` is barred, and `glunk-admin[bot]` opens
-  workflow PRs only. Dependabot keeps opening its own. Each of those touches `code_paths`, so it
-  waits for the check to be required and for a passing `glunk-review[bot]` review on its head. #115 is itself a workflow PR, so it is the first
-  dev-workflow PR after the cutover.
+  workflow PRs only. Dependabot keeps opening its own, which wait for the check to be required
+  and for the review the Consequences below describe. #115 is itself a workflow PR, so it is the
+  first dev-workflow PR after the cutover.
 - **Order:** the second GitHub account's write access is removed before the cutover PR merges. The dev
   App is installed, and the repo added to the token broker, only after the check is required and
   #115's PR has merged. That is later than `reference/cutover.md` requires, and it means no
@@ -359,7 +360,8 @@ Consequences:
   Code session on the host; the review runs in its container.
 - `glunk-admin[bot]` is not declared in `identities`, so a review of a `glunk-admin` PR takes
   the plugin's untrusted path, with no local execution.
-- Dependabot PRs that touch `code_paths` need that review too.
+- Every Dependabot PR touches `code_paths`, so it needs a passing `glunk-review[bot]` review on
+  its head too.
 - A fork PR cannot pass the gate.
 
 Residuals:
@@ -382,13 +384,17 @@ Residuals:
   On a PR that adds or edits a workflow, `architect-review` is therefore not evidence of a review:
   before approving, the maintainer confirms the `glunk-review[bot]` review on the head. The other
   exception is a branch the token pushed: a workflow on it keeps firing on later pushes, and on a
-  PR opened from it, so those branches are deleted, or checked for stray workflows, before any dev container runs again.
+  PR opened from it, so those branches are deleted, or checked for stray workflows, before any dev
+  container runs again.
 - The `glunk-admin` installation itself holds Administration, Environments and Actions write. Only
   the `--perms` passed to `wow-admin` keeps them off a minted token.
   - With Administration a token could edit or delete either ruleset or add a bypass actor to it,
-    which defeats the required check and the code owner's approval. The daily
-    `ruleset-drift` workflow does not see a deleted approval ruleset (below). It could also change the `release` environment's reviewers or admin bypass, which
-    `RO-D18` and this entry's `release` bullet rely on.
+    which defeats the required check and the code owner's approval. The daily `ruleset-drift`
+    workflow sees none of a bypass actor, an edit to the approval rule or its deletion (below).
+    It could also change the `release` environment's reviewers, admin bypass or main-only branch
+    policy, which `RO-D18` and this entry's `release` bullet rely on. And it could add a
+    collaborator or a deploy key, a write path that outlives the token, so after each token the
+    maintainer re-lists the repo's write paths: collaborators, deploy keys and App installations.
   - With Environments it could change that environment's secrets or variables, which `release.yml`
     reads.
   - With Actions it could dispatch `release.yml`, still gated by that environment's review, or
