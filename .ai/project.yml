@@ -1,16 +1,15 @@
 # way-of-working plugin contract for this repo (plugin v0.30.0 schema).
 # Full key reference: reference/project-schema.md in glunk-works/claude-workbench at the pinned tag.
 # Every repo-derived value was read from this repo on 2026-11-05, and `repo` and the ruleset
-# blocks again on 2026-11-06 after the transfer to glunk-works, except the approval ruleset, read
-# back by id on PENDING-DATE, and what the last paragraph names. The ruleset blocks mirror a live read-back of
+# blocks again on 2026-11-06 after the transfer to glunk-works, except the approval ruleset and the
+# check pins, read back on 2026-11-07, and what the last paragraph names. The ruleset blocks mirror a live read-back of
 # `GET /repos/glunk-works/resume-orchestrator/rules/branches/main`, and the approval ruleset
 # mirrors its read-back by id. The identities ids come from `GET users/<slug>[bot]` and
 # `GET users/<login>`. The check names are the names GitHub reports for the required checks.
 #
-# Mirrored ahead of GitHub (RO-D21): the pins on the six checks that were unpinned, which the
-# maintainer reads back on PENDING-DATE before the cutover PR merges; and `architect-review` with
-# its pin, which the maintainer adds after the merge. That order is reference/cutover.md's for a
-# repo whose ruleset does not yet require the check.
+# Mirrored ahead of GitHub (RO-D21): `architect-review` with its pin, which the maintainer adds
+# after the merge. That order is reference/cutover.md's for a repo whose ruleset does not yet
+# require the check.
 
 # ── identity ─────────────────────────────────────────────────────────────────
 repo: glunk-works/resume-orchestrator
@@ -72,7 +71,7 @@ gates:
 # `main-required-checks` (ruleset id 26540407), `enforcement: active`, no bypass actors (read from
 # `GET /repos/glunk-works/resume-orchestrator/rulesets/26540407`), targeting the default branch.
 # `check_integrations` pins each check to 15368 (GitHub Actions). `main-code-owner-approval` holds the
-# code owner's approval (ruleset id PENDING-ID, read back by id on PENDING-DATE).
+# code owner's approval (ruleset id 26770416, read back by id on 2026-11-07).
 # A new check goes to GitHub first and is mirrored here second, except as the header's
 # mirrored-ahead paragraph says.
 ruleset:
