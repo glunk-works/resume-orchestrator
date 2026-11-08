@@ -29,10 +29,10 @@ governs. Every local deviation is listed under *Deviations and known gaps*.
 - **One task, one issue, one branch, one PR.** A human approval gates every merge (the HITL
   Gate). Claude publishes a work branch and opens the PR as the identity `RO-D21` names:
   `glunk-dev[bot]` for an ordinary PR, and a host session as `glunk-admin[bot]` for a PR that
-  adds, edits or deletes a workflow file. Dependabot opens its own PRs. Never as `Seuss27`, who
-  approves as code owner. Claude never merges, never dispatches the release workflow or approves a
-  deployment to the `release` environment, never pushes to `main`, and never force-pushes a branch
-  that has been pushed without asking first.
+  adds, edits or deletes a workflow file. Never as `Seuss27`, who approves as code owner.
+  Dependabot opens its own PRs. Claude never merges, never dispatches the release workflow or
+  approves a deployment to the `release` environment, never pushes to `main`, and never
+  force-pushes a branch that has been pushed without asking first.
 - **Model routing is manual.** The Architect (Opus) plans, reviews and makes boundary calls.
   The Coder (Sonnet) executes a defined task and runs the green gate. Reviews happen in a
   *fresh* session: switching with `/model opus` inside the session that wrote the code is

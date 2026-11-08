@@ -390,20 +390,30 @@ Residuals:
   the `--perms` passed to `wow-admin` keeps them off a minted token.
   - With Administration a token could change or delete any ruleset, or add a bypass actor to it.
     On the branch rulesets that defeats the required check and the code owner's approval. On the
-    two tag rulesets of `RO-D18` it lets a token move, delete or create `v` tags. It could change
-    or delete the `release` environment, whose reviewers, admin bypass and main-only branch policy
-    `RO-D18` and this entry's `release` bullet rely on. It could invite a collaborator, grant a
-    team access or add a deploy key, write paths that outlive the token, and rename, transfer or
-    delete the repo. The daily `ruleset-drift` workflow sees none of the environment, write-path or
-    tag-ruleset changes, and little of the branch-ruleset ones (below). So after each token the
-    maintainer reads back what Administration can change, including: every ruleset that
-    `GET repos/glunk-works/resume-orchestrator/rulesets` lists, by id (enforcement, target, branch
-    or tag conditions, rules, bypass actors), the `release` environment's protection, the default
-    branch, the repo's name and owner, the repo's Actions settings (the default `GITHUB_TOKEN`
-    permissions, whether Actions may create or approve a PR, the allowed-actions policy and SHA
-    pinning, and the fork-PR approval policy), the auto-merge setting, and the repo's write paths:
-    collaborators with their permission levels, pending invitations, teams, deploy keys and App
-    installations.
+    two tag rulesets of `RO-D18`, with its `contents` write, it lets a token move, delete or create
+    `v` tags. It could change or delete the `release` environment, whose reviewers, admin bypass
+    and main-only branch policy `RO-D18` and this entry's `release` bullet rely on. It could invite
+    a collaborator, grant a team access, add a deploy key or register a self-hosted runner, write
+    paths that outlive the token. It could rename, transfer, delete or make private the repo, and
+    turn off secret scanning's push protection. The daily `ruleset-drift` workflow sees none of the
+    environment, write-path or tag-ruleset changes, and little of the branch-ruleset ones (below).
+    A read at one moment also cannot show a setting that was changed and put back. So after each
+    token the maintainer reads back what Administration can change, including:
+    - the four rulesets by name and id (`main-required-checks`, `main-code-owner-approval`, and
+      `RO-D18`'s `protected-release-tags` and `release-tag-creation`), with each one's enforcement,
+      target, branch or tag conditions, rules and bypass actors. All four must still be listed, and
+      any other that `GET repos/glunk-works/resume-orchestrator/rulesets` lists is a finding;
+    - evidence that nothing was changed and put back: each ruleset's change history
+      (`GET repos/glunk-works/resume-orchestrator/rulesets/<id>/history`) has no entry from the
+      token's life, `main`'s head is still the last merge the maintainer approved, and every `v`
+      tag is still at its release commit;
+    - the `release` environment's protection, the default branch, and the repo's name, owner and
+      visibility;
+    - the repo's Actions settings (the default `GITHUB_TOKEN` permissions, whether Actions may
+      create or approve a PR, the allowed-actions policy and SHA pinning, and the fork-PR approval
+      policy), the auto-merge setting and secret scanning's push protection;
+    - the repo's write paths: collaborators with their permission levels, pending invitations,
+      teams, deploy keys, self-hosted runners (expect none) and App installations.
   - With Environments it could change that environment's secrets or variables, which `release.yml`
     reads.
   - With Actions it could dispatch `release.yml`, still gated by that environment's review,
