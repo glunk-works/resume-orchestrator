@@ -388,26 +388,28 @@ Residuals:
   container runs again.
 - The `glunk-admin` installation itself holds Administration, Environments and Actions write. Only
   the `--perms` passed to `wow-admin` keeps them off a minted token.
-  - With Administration a token could edit or delete either ruleset or add a bypass actor to it,
-    which defeats the required check and the code owner's approval. The daily `ruleset-drift`
-    workflow sees none of a bypass actor, an edit to either ruleset's `pull_request` rule, or the
-    approval ruleset's deletion or move off `active` enforcement (below). It could also change the
-    `release` environment's reviewers, admin bypass or main-only branch policy, which `RO-D18` and
-    this entry's `release` bullet rely on. And it could invite a collaborator, grant a team access
-    or add a deploy key, write paths that outlive the token. So after each token the maintainer
-    re-lists the repo's write paths: collaborators, pending invitations, teams, deploy keys and
-    App installations.
+  - With Administration a token could change or delete either ruleset, or add a bypass actor to
+    it, which defeats the required check and the code owner's approval. It could change or delete
+    the `release` environment, whose reviewers, admin bypass and main-only branch policy `RO-D18`
+    and this entry's `release` bullet rely on. And it could invite a collaborator, grant a team
+    access or add a deploy key, write paths that outlive the token. The daily `ruleset-drift`
+    workflow sees little of this (below). So after each token the maintainer reads back everything
+    Administration can change: both rulesets by id (enforcement, target, rules, bypass actors),
+    the `release` environment's protection, and the repo's write paths: collaborators with their
+    permission levels, pending invitations, teams, deploy keys and App installations.
   - With Environments it could change that environment's secrets or variables, which `release.yml`
     reads.
   - With Actions it could dispatch `release.yml`, still gated by that environment's review, or
     disable the daily `ruleset-drift` workflow.
-- No automated check reads the approval rule's parameters; only the manual read-back by id does.
+- No automated check reads either ruleset's rule parameters or bypass actors; only the manual
+  read-back by id does.
   Run by a repo admin, `ruleset-drift.sh` reports, per ruleset, the missing types and checks,
   whether a `pull_request` rule applies, and the bypass-actor count. Run by anyone else, it reports
   every entry as inconclusive, or as missing when it cannot find the name. So
   `/way-of-working:resume` running as `glunk-dev` gets no ruleset signal. The daily `ruleset-drift`
-  workflow sees only rule types, checks and their pins, pooled across rulesets. Because the
-  approval ruleset's rule types are all carried by `main-required-checks` too, deleting the
-  approval ruleset, or moving it off `active` enforcement, goes unseen by that workflow.
+  workflow sees only rule types, checks and their pins, pooled across rulesets, so any other
+  change to a ruleset goes unseen by it. Because the approval ruleset's rule types are all carried
+  by `main-required-checks` too, that includes anything that stops the approval ruleset applying to
+  `main`: its deletion, a move off `active` enforcement or a change to its target.
 - `docs/` and the other rule-4 paths outside `code_paths` rest on the approval and the critic pass
   alone.
