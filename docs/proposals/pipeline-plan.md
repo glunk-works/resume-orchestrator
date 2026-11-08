@@ -751,7 +751,7 @@ the maintainer approves it. That approval also confirms the RO-D wording.
     through `env:`.
   - **`ruleset-drift` workflow:** a daily scheduled check that every declared ruleset entry, not
     only `main-required-checks`, still has its rule types, checks and pins carried, pooled across
-    rulesets rather than matched by id.
+    rulesets rather than matched by id (`RO-D21` records what that leaves unseen).
   - **Workflow hygiene:** every action is pinned by commit SHA with a version comment. A
     workflow has a top-level `permissions` of at most `contents: read` and sets
     `persist-credentials: false` on every checkout; the secrets-scan caller has no checkout of its own.

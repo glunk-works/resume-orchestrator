@@ -374,9 +374,11 @@ Residuals:
   the plan §5 residual, and it narrows to workflow PRs once other sessions run in containers.
 - While a `glunk-admin` token is live, it can push to or delete any branch but `main` and create
   tags other than the `v` tags `RO-D18` reserves. It can create, edit or delete releases on any
-  tag, release assets included, and push a branch workflow that declares `statuses`, `contents`
-  or `id-token` write for its own job. That workflow could post the `architect-review` context,
-  push as `github-actions[bot]`, or mint OIDC tokens and attestations under this repo. The code
+  tag, release assets included, and push a branch workflow that declares any write permission a
+  job can request for itself: `statuses`, `contents`, `id-token` and `actions` among them. That
+  workflow could post the `architect-review` context, push as `github-actions[bot]`, mint OIDC
+  tokens and attestations under this repo, or use `actions` write as the Actions point below
+  describes. The code
   owner's approval bounds only what merges. A short-lived token, revoked after use, with no dev or
   review container running meanwhile, bounds the rest, with two exceptions. A workflow PR's own
   workflows run on `pull_request`, so it can post `architect-review` (for instance from a job of
@@ -395,23 +397,29 @@ Residuals:
     bypass and main-only branch policy `RO-D18` and this entry's `release` bullet rely on. It could
     invite a collaborator, grant a team access, add a deploy key or register a self-hosted runner:
     write paths that outlive the token. It could rename, transfer, delete or make private the
-    repo, and turn off secret scanning's push protection. The daily `ruleset-drift` workflow sees none of the
-    environment, write-path or tag-ruleset changes, and little of the branch-ruleset ones (the drift
-    residual below).
+    repo, and turn off secret scanning's push protection. The daily `ruleset-drift` workflow sees
+    none of the environment, write-path or tag-ruleset changes, and little of the branch-ruleset
+    ones (the drift residual below).
     A read at one moment cannot show a ruleset, `main` or a `v` tag that was changed and put back,
-    and an environment has no history endpoint (the `release` point below). So after each token the
-    maintainer reads back what Administration can change, including:
+    and an environment has no history endpoint (the release-environment rule below). So after each
+    token the maintainer reads back what Administration can change, including:
     - the four rulesets by name and id (`main-required-checks`, `main-code-owner-approval`, and
       `RO-D18`'s `protected-release-tags` and `release-tag-creation`), with each one's enforcement,
       target, branch or tag conditions, rules and bypass actors. All four must still be listed, and
       any other that `GET repos/glunk-works/resume-orchestrator/rulesets` lists is a finding;
-    - evidence that nothing was changed and put back: each ruleset's change history
+    - evidence that nothing was changed and put back. Each ruleset's change history
       (`GET repos/glunk-works/resume-orchestrator/rulesets/<id>/history`) has no entry from the
-      token's life, `main`'s head is still the last merge the maintainer approved, no `v` tag was
-      added that the maintainer did not release, and every `v` tag is still at its release commit;
+      token's life. Both branch rulesets target the default branch, so a default-branch change
+      leaves no ruleset history, and a matching head for `main` proves nothing by itself: the
+      activity for `refs/heads/main` (`GET repos/glunk-works/resume-orchestrator/activity?ref=...`)
+      shows only the maintainer's approved merges, the default branch was not changed during the
+      token's life (the web UI's audit log; the REST endpoint is unavailable on this plan), no `v`
+      tag was added that the maintainer did not release, and every `v` tag is still at its release
+      commit;
     - the `release` environment's protection, the default branch, and the repo's name, owner and
       visibility;
-    - the repo's Actions settings (the default `GITHUB_TOKEN` permissions, whether Actions may
+    - every workflow still active (`GET repos/glunk-works/resume-orchestrator/actions/workflows`),
+      and the repo's Actions settings (the default `GITHUB_TOKEN` permissions, whether Actions may
       create or approve a PR, the allowed-actions policy and SHA pinning, and the fork-PR approval
       policy), the auto-merge setting and secret scanning's push protection;
     - the repo's write paths: collaborators with their permission levels, pending invitations,
@@ -419,15 +427,21 @@ Residuals:
   - With Environments it could change that environment's secrets or variables, which `release.yml`
     reads.
   - A change to the `release` environment's reviewers, branch policy or admin bypass needs
-    Administration. It can be put back, and no endpoint the read-back calls shows it afterwards,
-    though the org audit log may. A branch workflow with `environment: release` could read the
-    release App key meanwhile. So, as a rule, a token minted with Administration, Environments or
-    Actions is treated as exposing that key: the key is rotated, and the runs, deployments and
-    releases since the mint are reviewed. A token minted with `--perms` for `contents`,
-    `pull_requests` and `workflows` write, as the cutover PR's token was, holds none of the three.
+    Administration. It can be put back, and no endpoint the read-back calls shows what changed,
+    though the web UI's audit log may. A branch workflow with `environment: release` could read
+    the release App key meanwhile. So, as a rule, a token minted with Administration,
+    Environments or Actions is treated as exposing that key: the key is rotated (the old key is
+    deleted, because a new one does not revoke it, and installation tokens already minted stay
+    valid for up to an hour), and the runs, deployments and releases since the mint are reviewed,
+    with the release App's `v` tag and branch activity. A token minted with `--perms` for
+    `contents`, `pull_requests` and `workflows` write, as the cutover PR's token was, holds none of
+    the three. A branch workflow it pushes can request `actions` write for its own job, but not
+    Administration or Environments.
   - With Actions it could dispatch `release.yml`, still gated by that environment's review,
     disable the daily `ruleset-drift` workflow, or delete workflow runs, logs and artifacts, which
-    are evidence of what a token did.
+    are evidence of what a token did. A branch workflow pushed by any token with `workflows` write
+    can request `actions` write for its own job, so these are reachable without the Actions
+    permission on the token.
 - No automated check reads the `pull_request` rule's parameters or who a ruleset's bypass actors
   are; only the manual read-back by id does.
   Run by a repo admin, `ruleset-drift.sh` reports, per ruleset, the missing types and checks,

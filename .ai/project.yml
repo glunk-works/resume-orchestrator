@@ -1,12 +1,13 @@
 # way-of-working plugin contract for this repo (plugin v0.30.0 schema).
 # Full key reference: reference/project-schema.md in glunk-works/claude-workbench at the pinned tag.
-# Live settings in this file were read back from GitHub: `repo` and the ruleset blocks on
-# 2026-11-06, after the transfer to glunk-works, the approval ruleset and the check pins on
-# 2026-11-07, and the identities ids, from `GET users/<slug>[bot]` and `GET users/<login>`, on
-# 2026-11-08. Except for `architect-review`, which the next paragraph covers, the ruleset blocks
-# mirror a live read-back of `GET /repos/glunk-works/resume-orchestrator/rules/branches/main`, the
-# approval ruleset mirrors its read-back by id, and the check names are the names GitHub reports
-# for the required checks. Every other value is a decision recorded in this repo, not a read-back.
+# Live settings in this file were read back from GitHub: `repo` and the `main-required-checks`
+# blocks on 2026-11-06, after the transfer to glunk-works, the `main-code-owner-approval` block and
+# the check pins on 2026-11-07, and the identities ids, from `GET users/<slug>[bot]` and
+# `GET users/<login>`, on 2026-11-08. Except for `architect-review`, which the next paragraph
+# covers, the ruleset blocks mirror a live read-back of
+# `GET /repos/glunk-works/resume-orchestrator/rules/branches/main`, the approval ruleset mirrors its
+# read-back by id, and the check names are the names GitHub reports for the required checks. Every
+# other value is a decision recorded in this repo, not a read-back.
 #
 # `architect-review` and its pin were mirrored here by PR 1 of #88 ahead of GitHub requiring them.
 # The maintainer adds the check to `main-required-checks` at step 1 of that issue's After PR 1
