@@ -301,3 +301,82 @@ tool.
 Residual: the wheel is built in a job that uses uv's cache and a build backend pinned to an exact
 version but not by hash, so the attestation covers the built bytes, not a hermetic build. This
 replaces `RO-D18`'s second residual for the uv build.
+
+## RO-D21 — The repo cuts over to declared identities and a fresh-session review gate
+
+*Decided 2026-11-07 (maintainer).*
+`.ai/project.yml` declares `identities` as a map, and a PR that touches `code_paths` cannot merge
+until the reviewer App posts a fresh-session review that passes on its current head. Every PR into
+`main` also needs the code owner's approval. The cutover follows the plugin's
+`reference/cutover.md` at `v0.30.0`, and task F7 in the plan carries it (issue #88).
+- **Identities and the gate:** `maintainer` is `Seuss27`; the Apps are `glunk-dev[bot]` (the dev
+  App, `commit_route: api`), `glunk-review[bot]` (the reviewer) and `glunk-loop[bot]`, which the
+  loop never uses here but which readers now refuse as an author. The gate is
+  `architect-review`, triggered on `code_paths`. `CLAUDE.md` joins `code_paths`, because it
+  changes agent behaviour as much as `.claude/` does. `agents.diff_rule` stays: it selects critics
+  for the pre-PR pass and covers `docs/` and other paths outside `code_paths`.
+- **Two rulesets:** `main-required-checks` keeps the status checks, all pinned to GitHub Actions
+  (15368), and `architect-review` is added to it. `main-code-owner-approval` holds the code
+  owner's approval, with no bypass actor: code-owner review, stale reviews dismissed on push, and
+  last-push approval. `.github/scripts/check_ruleset.py` accepts an entry with no status checks.
+- **Who opens and who approves:** the only code owner is `Seuss27`, and GitHub does not let an
+  author approve their own PR or approve after pushing last. So `Seuss27` opens no PR after the
+  cutover. `glunk-dev[bot]` opens every ordinary PR, Dependabot its own, and `glunk-admin[bot]`
+  every PR that adds, edits or deletes a workflow file. `Seuss27` approves and merges.
+- **App commits:** the dev App publishes through the REST git data API with the plugin's
+  `api-commit.sh`, so each commit is authored and committed by the App and signed by GitHub, and no
+  `git push` from a container is needed. `main` does not require signed commits.
+- **Workflow PRs:** the dev App has no Workflows permission, and `api-commit.sh` refuses
+  `.github/workflows/`. A workflow PR is built by a host session in a fresh clone made for that
+  build and published with a short-lived `wow-admin` token holding `contents`, `pull_requests` and
+  `workflows` write. No dev or review container runs while that token is live. Every other
+  dev-workflow session runs in a dev container.
+- **Order:** the second GitHub account's write access is removed before PR 1 merges. The dev
+  App is installed, and the repo added to the token broker, only after the check is required and
+  #115 has merged. That is later than `reference/cutover.md` requires, and it means no `glunk-dev`
+  session can touch PR 1.
+- **The gate job takes no checkout:** it holds `statuses: write`, so it checks out no ref and
+  runs no local action or repo script. That goes further than `reference/cutover.md`, which names
+  those only as a limit of the integration pin.
+- **The `release` environment:** it admits only `main` and requires `Seuss27`'s review
+  (`RO-D18`). The cutover also requires that `Seuss27` is the only required reviewer and that
+  admins cannot bypass it. GitHub's default lets admins bypass, so this may be a settings change,
+  which this entry records when one is made.
+
+Consequences:
+- Readers trust by id, not by `author_association`.
+- A spec comment, including one already posted on another open task, is used only after a
+  maintainer's reaction after its last edit.
+- Under a map the builder never reads a task issue's body, as the plugin's `coder` agent says.
+- The review is posted by the host launcher as `glunk-review[bot]`. The launcher runs no Claude
+  Code session on the host; the review runs in its container.
+- `glunk-admin[bot]` is not declared in `identities`, so a review of a `glunk-admin` PR takes
+  the plugin's untrusted path, with no local execution.
+- Dependabot PRs that touch `code_paths` need that review too.
+- A fork PR cannot pass the gate.
+
+Residuals:
+- A host session can reach more than `Seuss27`'s credential: the host's identity directory also
+  holds the reviewer and dev Apps' keys, a Claude credential and the installed identity tools. A
+  misbehaving host session could open a PR as `glunk-admin`, mint a `glunk-review` token and post
+  a passing review, then approve and merge as `Seuss27`. It could also replace `wow-admin` to
+  catch its passphrase. What bounds this is the rule that a host session never approves, merges or
+  changes settings, and the maintainer's check that their own approval is a PR's only one. This is
+  the plan §5 residual, and it narrows to workflow PRs once other sessions run in containers.
+- While a `glunk-admin` token is live, it can push to or delete any branch but `main` and create
+  tags other than the `v` tags `RO-D18` reserves. It can create, edit or delete releases on any
+  tag, release assets included, and push a branch workflow that declares `statuses`, `contents`
+  or `id-token` write for its own job. That workflow could post the `architect-review` context,
+  push as `github-actions[bot]`, or mint OIDC tokens and attestations under this repo. The code
+  owner's approval bounds only what merges. A short-lived token, revoked after use, with no dev or
+  review container running meanwhile, bounds the rest.
+- The `glunk-admin` installation itself holds Administration. Only the `--perms` passed to
+  `wow-admin` keeps it off a minted token.
+- No automated check reads the approval rule's parameters; only the manual read-back by id does.
+  Run by a repo admin, `ruleset-drift.sh` reports, per ruleset, the missing types and checks,
+  whether a `pull_request` rule applies, and the bypass-actor count. Run by anyone else, it reports
+  every entry as inconclusive, or as missing when it cannot find the name. So
+  `/way-of-working:resume` running as `glunk-dev` gets no ruleset signal. The daily `ruleset-drift`
+  workflow sees only rule types, checks and their pins, pooled across rulesets.
+- `docs/` and the other rule-4 paths outside `code_paths` rest on the approval and the critic pass
+  alone.

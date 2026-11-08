@@ -13,11 +13,12 @@ This repo follows the `glunk-works` way of working: the `way-of-working` plugin 
 `plugins/way-of-working/reference/conventions.md`, and its session protocol is in
 `reference/workflow.md`. The plugin is pinned in `.claude/settings.json` and parameterised by
 [`.ai/project.yml`](.ai/project.yml). The project file is the single source for code paths, the
-green gate, the ruleset, agents and models. **Session flow:**
+green gate, the rulesets, the identities, agents and models. **Session flow:**
 - **Start:** run `/way-of-working:resume`. It rehydrates from `.ai/next-steps.md` and
   `.ai/state.json`, never from memory.
 - **Before a PR:** run `/way-of-working:critic-gate` on every diff.
-- **To open the PR:** run `/way-of-working:ship`.
+- **To open the PR:** run `/way-of-working:ship`. It does not open a workflow PR; the HITL bullet
+  below says who does.
 - **For a merge verdict:** run `/way-of-working:pr-checks`.
 - **Before switching model or session:** run `/way-of-working:handoff`.
 - **At sprint close:** run `/way-of-working:archive-sprint`.
@@ -26,14 +27,20 @@ This file adds only what is specific to this repo. Where it is silent, `conventi
 governs. Every local deviation is listed under *Deviations and known gaps*.
 
 - **One task, one issue, one branch, one PR.** A human approval gates every merge (the HITL
-  Gate). Claude commits and pushes on a work branch and opens the PR. It never merges, never
-  dispatches the release workflow or approves a deployment to the `release` environment, never
-  pushes to `main`, and never force-pushes a branch that has been pushed without asking first.
+  Gate). Claude commits and pushes on a work branch and opens the PR, as the identity `RO-D21`
+  names: `glunk-dev[bot]` for an ordinary PR, a host session as `glunk-admin[bot]` for a PR that
+  adds, edits or deletes a workflow file, and Dependabot for its own. Never `Seuss27`, who
+  approves as code owner. Claude never merges, never dispatches the release workflow or approves a
+  deployment to the `release` environment, never pushes to `main`, and never force-pushes a branch
+  that has been pushed without asking first.
 - **Model routing is manual.** The Architect (Opus) plans, reviews and makes boundary calls.
   The Coder (Sonnet) executes a defined task and runs the green gate. Reviews happen in a
   *fresh* session: switching with `/model opus` inside the session that wrote the code is
-  proofreading, not review.
-- **Run the critic pass before opening the PR.** Critics are separate read-only subagents:
+  proofreading, not review. On a PR that touches `code_paths`, the fresh-session review gate
+  (`review.ci_gate` in `.ai/project.yml`) is that review.
+- **Run the critic pass before opening the PR.** It is the pre-PR look; on a PR that touches
+  `code_paths`, the fresh-session review gate is the review of record. Critics are separate
+  read-only subagents:
   `architect` checks correctness and invariants, `security-critic` checks trust boundaries and
   PII, and `docs-consistency` checks prose against ground truth. `agents.diff_rule` in
   `.ai/project.yml` selects the set by rule and `critic-gate` spawns it with no pick-list. The
@@ -96,6 +103,8 @@ writes itself goes under `resume-optimizer/…`.
   squash-merged branch is dead.
 - **Push identity:** on this machine, `gh` and git's credential helper resolve to different
   GitHub accounts. Read `conventions.md` § *Push identity* before pushing or opening a PR.
+  Sessions in a dev container publish through the git data API with tokens from the host's
+  broker, not `git push`. `RO-D21` records the model.
 
 ## The rules that matter most here
 
@@ -157,6 +166,7 @@ repo rather than suppressing the rule.
 | Branch prefixes cover every commit type, not only `feat\|fix\|chore\|docs` | permanent |
 | `pr-title` rejects the `!` breaking-change marker that `conventions.md` allows | permanent |
 | No `sprint/NN-slug` branches: one `<type>/<issue#>-<slug>` branch per issue, with sprints as milestones | permanent; watch `ship` and `archive-sprint` for assumptions about `sprint/` branches |
+| A workflow PR is built by a host session and published as `glunk-admin[bot]` with a short-lived token, not through `/way-of-working:ship` (`RO-D21`) | the plugin can open a workflow PR itself |
 | The legacy generator sends career data to the provider `LLM_PROVIDER` selects (Gemini by default), before `RO-D13`'s allowlist exists; the generation and ATS calls carry no contact block, but `--score-job` still sends the `Pref_*` preferences, to the provider `LLM_PROVIDER` selects like the other calls | F4 retires the path |
 
 ## Load-bearing docs

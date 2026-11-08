@@ -5,16 +5,27 @@ Usage: check_ruleset.py RULES_JSON PROJECT_JSON
 RULES_JSON is the response of `GET /repos/{repo}/rules/branches/main`: the rules of every ruleset
 that applies to the branch, tagged by ruleset id. PROJECT_JSON is `.ai/project.yml` as JSON. For
 the `ruleset` block and every entry under `rulesets`, each declared rule type must be among the
-applying rules and each declared required check among the `required_status_checks` contexts.
-Extra checks on GitHub are not drift. A block may also declare `check_integrations`, a mapping
-from a declared check to the id of the app it must be pinned to (for example 15368, GitHub
-Actions). GitHub must then require that check with that `integration_id`, so a status from
-another app or a personal token cannot satisfy it. A job in this repo that can write statuses
-still posts as that app, so the pin does not stop one. A `check_integrations` that is null or not
-a mapping fails closed. So does unreadable or wrongly shaped input, an empty `rulesets` list, and
-an empty declared `required_checks` or `rule_types`. Bypass actors are not in the branch-rules
-response, so they are not checked. The `pull_request` rule's parameters (approval count, merge
-methods) are in it, but this check leaves them alone.
+applying rules. Rule types are pooled across rulesets: a type any applying ruleset carries meets
+every block that declares it.
+
+Whether an entry is compared for checks follows from its own `rule_types`. The `ruleset` block, and
+every entry that declares `required_status_checks`, must declare a non-empty `required_checks`, each
+of which must be among the `required_status_checks` contexts. Extra checks on GitHub are not drift.
+An entry without that rule type, such as the code-owner approval ruleset, may omit `required_checks`
+and `check_integrations` or set either to `null`; any other value fails closed.
+
+A block may also declare `check_integrations`, a mapping from a declared check to the id of the app
+it must be pinned to (for example 15368, GitHub Actions). GitHub must then require that check with
+that `integration_id`, so a status from another app or a personal token cannot satisfy it. A job in
+this repo that can write statuses still posts as that app, so the pin does not stop one.
+
+Fail-closed cases. For the whole input: unreadable or wrongly shaped input, and an empty `rulesets`
+list. For every block: an empty `rule_types`, and a non-null `check_integrations` that is not a
+mapping. For the `ruleset` block and for entries with `required_status_checks`: an empty
+`required_checks` and a null `check_integrations`.
+
+Bypass actors are not in the branch-rules response, so they are not checked. The `pull_request`
+rule's parameters (approval count, merge methods) are in it, but this check leaves them alone.
 """
 
 import json
@@ -83,6 +94,13 @@ def _integrations(block: Any, label: str, declared: list[str]) -> dict[str, int]
     return pins
 
 
+def _no_checks(block: dict[str, Any], label: str) -> None:
+    """Fails closed unless an entry without `required_status_checks` declares no checks."""
+    for key in ("required_checks", "check_integrations"):
+        if block.get(key) is not None:
+            raise ShapeError(f"{label} has no required_status_checks rule type but declares {key}")
+
+
 def check(rules: Any, project: Any) -> list[str]:
     """Returns what the declared rulesets require and GitHub does not apply."""
     types, contexts = applying(rules)
@@ -95,9 +113,13 @@ def check(rules: Any, project: Any) -> list[str]:
     blocks += [(f"rulesets[{i}]", entry) for i, entry in enumerate(entries)]
     problems: list[str] = []
     for label, block in blocks:
-        for rule_type in _declared(block, label, "rule_types"):
+        rule_types: list[str] = _declared(block, label, "rule_types")
+        for rule_type in rule_types:
             if rule_type not in types:
                 problems.append(f"{label}: missing rule type {rule_type}")
+        if label != "ruleset" and "required_status_checks" not in rule_types:
+            _no_checks(block, label)
+            continue
         declared: list[str] = _declared(block, label, "required_checks")
         for context in declared:
             if context not in contexts:
