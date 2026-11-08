@@ -27,10 +27,10 @@ This file adds only what is specific to this repo. Where it is silent, `conventi
 governs. Every local deviation is listed under *Deviations and known gaps*.
 
 - **One task, one issue, one branch, one PR.** A human approval gates every merge (the HITL
-  Gate). Claude commits and pushes on a work branch and opens the PR, as the identity `RO-D21`
-  names: `glunk-dev[bot]` for an ordinary PR, a host session as `glunk-admin[bot]` for a PR that
-  adds, edits or deletes a workflow file, and Dependabot for its own. Never `Seuss27`, who
-  approves as code owner. Claude never merges, never dispatches the release workflow or approves a
+  Gate). Claude publishes a work branch and opens the PR as the identity `RO-D21` names:
+  `glunk-dev[bot]` for an ordinary PR, and a host session as `glunk-admin[bot]` for a PR that
+  adds, edits or deletes a workflow file. Never as `Seuss27`, who approves as code owner.
+  Claude never merges, never dispatches the release workflow or approves a
   deployment to the `release` environment, never pushes to `main`, and never force-pushes a branch
   that has been pushed without asking first.
 - **Model routing is manual.** The Architect (Opus) plans, reviews and makes boundary calls.
@@ -101,9 +101,9 @@ writes itself goes under `resume-optimizer/…`.
   `fix/41-test-isolation`). Sprints are GitHub milestones, not branches (plan §4 *Sprints*).
 - **Merges** are squash merges, so the **PR title is the commit that survives**. A
   squash-merged branch is dead.
-- **Push identity:** on this machine, `gh` and git's credential helper resolve to different
-  GitHub accounts. Read `conventions.md` § *Push identity* before pushing or opening a PR.
-  Sessions in a dev container publish through the git data API with tokens from the host's
+- **Push identity:** in a host session on this machine, `gh` and git's credential helper resolve
+  to different GitHub accounts. Read `conventions.md` § *Push identity* before pushing or opening
+  a PR. Sessions in a dev container publish through the git data API with tokens from the host's
   broker, not `git push`. `RO-D21` records the model.
 
 ## The rules that matter most here

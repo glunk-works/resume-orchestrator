@@ -228,7 +228,7 @@ APPROVAL: dict[str, Any] = {
 
 def _with_approval(**extra: Any) -> dict[str, Any]:
     project = copy.deepcopy(PROJECT)
-    project["rulesets"].append({**APPROVAL, **extra})
+    project["rulesets"].append({**copy.deepcopy(APPROVAL), **extra})
     return project
 
 
@@ -245,8 +245,9 @@ def test_an_approval_entry_with_any_other_check_value_fails_closed(key: str, val
 
 
 def test_an_approval_entry_is_not_compared_for_checks() -> None:
-    problems = check_ruleset.check(_rules(CHECKS), _with_approval())
-    assert problems == []
+    problems = check_ruleset.check(_rules(["lint"]), _with_approval())
+    assert problems
+    assert all(p.startswith(("ruleset:", "rulesets[0]:")) for p in problems)
 
 
 def test_an_approval_entrys_missing_rule_types_are_reported() -> None:
@@ -254,7 +255,7 @@ def test_an_approval_entrys_missing_rule_types_are_reported() -> None:
     project = copy.deepcopy(PROJECT)
     project["ruleset"]["rule_types"] = ["deletion"]
     project["rulesets"][0]["rule_types"] = ["deletion", "required_status_checks"]
-    project["rulesets"].append(dict(APPROVAL))
+    project["rulesets"].append(copy.deepcopy(APPROVAL))
     problems = check_ruleset.check(rules, project)
     assert problems == ["rulesets[1]: missing rule type pull_request"]
 

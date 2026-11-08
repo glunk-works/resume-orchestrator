@@ -749,8 +749,8 @@ the maintainer approves it. That approval also confirms the RO-D wording.
   - **`pr-title` workflow:** checks the Conventional Commits grammar with a 72-character limit,
     on its own `pull_request` trigger that includes `edited`. The title reaches the shell
     through `env:`.
-  - **`ruleset-drift` workflow:** a daily scheduled check that every declared ruleset entry still
-    holds, with rule types and checks pooled across rulesets rather than matched by id.
+  - **`ruleset-drift` workflow:** a daily scheduled check that the declared rule types, checks and
+    pins are still carried, pooled across rulesets rather than matched by id.
   - **Workflow hygiene:** every action is pinned by commit SHA with a version comment. A
     workflow has a top-level `permissions` of at most `contents: read` and sets
     `persist-credentials: false` on every checkout; the secrets-scan caller has no checkout of its own.

@@ -1,12 +1,13 @@
 # way-of-working plugin contract for this repo (plugin v0.30.0 schema).
 # Full key reference: reference/project-schema.md in glunk-works/claude-workbench at the pinned tag.
-# Every value below was read from this repo on 2026-11-05, and `repo` and the ruleset blocks
+# Every repo-derived value below was read from this repo on 2026-11-05, and `repo` and the ruleset blocks
 # again on 2026-11-06 after the transfer to glunk-works. The ruleset blocks mirror a live read-back
 # of `GET /repos/glunk-works/resume-orchestrator/rules/branches/main`, and the approval ruleset
 # mirrors its read-back by id. The identities ids come from `GET users/<slug>[bot]` and
 # `GET users/<login>`. The check names are the names GitHub reports for the required checks.
-# `architect-review` was mirrored here by the cutover PR before GitHub required it, at step 1 of
-# #88's "After PR 1 merges" (RO-D21).
+# The cutover PR mirrored `architect-review`, and the pins on the six checks that were unpinned,
+# before GitHub held them: the maintainer sets both, read back on PENDING-DATE, around the merge
+# (RO-D21).
 
 # ── identity ─────────────────────────────────────────────────────────────────
 repo: glunk-works/resume-orchestrator
@@ -67,7 +68,7 @@ gates:
 # ── branch protection ────────────────────────────────────────────────────────
 # `main-required-checks` (ruleset id 26540407), `enforcement: active`, no bypass actors (read from
 # `GET /repos/glunk-works/resume-orchestrator/rulesets/26540407`), targeting the default branch.
-# Every required check is pinned to 15368 (GitHub Actions). `main-code-owner-approval` holds the
+# `check_integrations` pins each check to 15368 (GitHub Actions). `main-code-owner-approval` holds the
 # code owner's approval (ruleset id PENDING-ID, read back by id on PENDING-DATE).
 # The cutover mirrored `architect-review` here first, as the plugin's reference/cutover.md orders
 # for a repo whose ruleset does not yet require the check. Otherwise a new check goes to GitHub
@@ -151,7 +152,7 @@ models:
 orchestration: null   # the loop never dispatches into this repo.
 
 # ── declared identities ──────────────────────────────────────────────────────
-# Trust is by numeric id. Each App id is the bot account's user id from `GET users/<slug>[bot]`,
+# Trust is by numeric id. Each App's id is the bot account's user id from `GET users/<slug>[bot]`,
 # not the App id. The maintainer is the only code owner and approves; an App or Dependabot opens
 # every PR (RO-D21). A `[bot]` login is double-quoted: unquoted, the brackets are flow indicators.
 identities:

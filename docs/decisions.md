@@ -320,8 +320,8 @@ until the reviewer App posts a fresh-session review that passes on its current h
   owner's approval, with no bypass actor: code-owner review, stale reviews dismissed on push, and
   last-push approval. `.github/scripts/check_ruleset.py` accepts an entry with no status checks.
 - **Who opens and who approves:** the only code owner is `Seuss27`, and GitHub does not let an
-  author approve their own PR or approve after pushing last. So `Seuss27` opens no PR after the
-  cutover. `glunk-dev[bot]` opens every ordinary PR, Dependabot its own, and `glunk-admin[bot]`
+  author approve their own PR, and the approval ruleset's last-push rule refuses an approval from
+  whoever pushed last. So `Seuss27` opens no PR after the cutover. `glunk-dev[bot]` opens every ordinary PR, Dependabot its own, and `glunk-admin[bot]`
   every PR that adds, edits or deletes a workflow file. `Seuss27` approves and merges.
 - **App commits:** the dev App publishes through the REST git data API with the plugin's
   `api-commit.sh`, so each commit is authored and committed by the App and signed by GitHub, and no
@@ -331,17 +331,18 @@ until the reviewer App posts a fresh-session review that passes on its current h
   build and published with a short-lived `wow-admin` token holding `contents`, `pull_requests` and
   `workflows` write. No dev or review container runs while that token is live. Every other
   dev-workflow session runs in a dev container.
-- **Order:** the second GitHub account's write access is removed before PR 1 merges. The dev
+- **Order:** the second GitHub account's write access is removed before the cutover PR merges. The dev
   App is installed, and the repo added to the token broker, only after the check is required and
   #115 has merged. That is later than `reference/cutover.md` requires, and it means no `glunk-dev`
-  session can touch PR 1.
+  session can touch the cutover PR.
 - **The gate job takes no checkout:** it holds `statuses: write`, so it checks out no ref and
   runs no local action or repo script. That goes further than `reference/cutover.md`, which names
   those only as a limit of the integration pin.
 - **The `release` environment:** it admits only `main` and requires `Seuss27`'s review
   (`RO-D18`). The cutover also requires that `Seuss27` is the only required reviewer and that
-  admins cannot bypass it. GitHub's default lets admins bypass, so this may be a settings change,
-  which this entry records when one is made.
+  admins cannot bypass it. GitHub's default lets admins bypass, so the cutover may change this
+  setting. The cutover PR's body records the read-back, and this entry is amended before that PR
+  merges if a change was made.
 
 Consequences:
 - Readers trust by id, not by `author_association`.
@@ -377,6 +378,8 @@ Residuals:
   whether a `pull_request` rule applies, and the bypass-actor count. Run by anyone else, it reports
   every entry as inconclusive, or as missing when it cannot find the name. So
   `/way-of-working:resume` running as `glunk-dev` gets no ruleset signal. The daily `ruleset-drift`
-  workflow sees only rule types, checks and their pins, pooled across rulesets.
+  workflow sees only rule types, checks and their pins, pooled across rulesets. Because the
+  approval ruleset's rule types are all carried by `main-required-checks` too, deleting or
+  disabling the approval ruleset goes unseen by that workflow.
 - `docs/` and the other rule-4 paths outside `code_paths` rest on the approval and the critic pass
   alone.
