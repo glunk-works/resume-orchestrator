@@ -1,25 +1,31 @@
 # Next steps
 
-**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. #155's PR (#163) is
-merged: `lanes` and `append_only` are declared on `main`, and the readme has the *Driver and lanes*
-note. #155 stays open until its host steps are recorded.
+**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. The first lane ran
+end to end: #75 was built in a lane and merged as #166. #155 and #88 are the milestone's open issues.
 
 **Just done:**
-- Built #155 from its approved spec comment and merged it as #163 (opened as `glunk-dev[bot]`).
-  - Critic pass (`architect`, `security-critic`, `docs-consistency`): 2 rounds, converged; all on
-    their frontmatter models, no second-opinion round. Round 1 caught a false readme step (it said
-    to update the Reference clone; `wow-lane.ps1` fetches `origin/main` itself), now fixed.
-  - Auto-merge was not armed on #163; the permission layer declined `gh pr merge --auto`.
+- Driver session on **opus**: `/way-of-working:resume` printed `Lanes: none`. #75 was moved from
+  S07 into S02. Its spec was drafted by a `wow-lane.ps1 -Spec 75` session (critic gate: 3 rounds,
+  converged) and approved. The lane, prepped with `lane.sh prep`, built #75 and shipped #166 as
+  `glunk-dev[bot]`. The architect review passed with two non-blocking findings, now tracked in #167.
+  The maintainer merged #166 (2c60b51), and `lane.sh done 75` cleaned up the lane.
+- A driver retro and a feature audit of the plugin against this repo became the cutover feedback.
+  It was relayed upstream through #169, which is closed and names the workbench issues.
+  claude-workbench#1349 is closed.
+- Filed #168 (pin line endings to LF across the repo; land it when no lane is in flight).
+- No code was written in this session, so it had no critic pass of its own.
 
-**Next:** close out #155 on the host, in a driver session on **opus**: relaunch the driver with
-`wow-driver.ps1` (the readme's *Driver and lanes* section), confirm `/way-of-working:resume` prints
-`Lanes: none`, run one lane end to end on an approved-spec issue of milestone 2, record the outcomes
-in one comment on #155 and close it. Then decide what remains of #88. This carries no
-`task #N —` token on purpose: it is the maintainer's host work, so resume waits.
+**Next:** close out #155 in a driver session on **opus**: post one comment recording the host steps
+and the first lane run (#75, PR #166, feedback relayed via #169), close #155, then decide with the
+maintainer what remains of #88. #88's approved spec reads `stale` and touches a workflow file, so a
+lane cannot build it. This line carries no `task #N —` token on purpose, so resume waits.
 
-**HITL Gate: NONE OPEN** — next gate: the maintainer records the host steps on #155 and closes it
+**HITL Gate: NONE OPEN** — next gate: the maintainer confirms the #155 outcome comment and scopes what remains of #88
 
 **Open for the owner (non-blocking):**
+- Milestone descriptions are stale after #75's move: S07's Build order still lists #75, and S02's
+  has neither #75 nor a *Lanes* line (`lane-groups.sh`). #167 and #168 have no milestone. All of
+  this is a `/way-of-working:plan-sprint` pass, run when the maintainer schedules it.
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
   GitHub repo description). Pick an owner.
 - `RO-D18` covers tags but not release assets: an account with write access can replace a
