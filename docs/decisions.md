@@ -318,8 +318,10 @@ until the reviewer App posts a fresh-session review that passes on its current h
   changes agent behaviour as much as `.claude/` does. `agents.diff_rule` stays: it selects critics
   for the pre-PR pass and covers `docs/` and other paths outside `code_paths`.
 - **Two rulesets:** `main-required-checks` keeps the status checks, all pinned to GitHub Actions
-  (15368), and `architect-review` is added to it. `main-code-owner-approval` holds the code
-  owner's approval, with no bypass actor: code-owner review, stale reviews dismissed on push, and
+  (15368), and `architect-review` is added to it. The maintainer added it to
+  `main-required-checks` themselves, by hand, with a `gh` login that holds admin rights on the
+  repo, not through any Claude Code session, by 2026-11-09. `main-code-owner-approval` holds the
+  code owner's approval, with no bypass actor: code-owner review, stale reviews dismissed on push, and
   last-push approval. `.github/scripts/check_ruleset.py` accepts an entry with no status checks.
 - **Who opens and who approves:** the only code owner is `Seuss27`, and GitHub does not let an
   author approve their own PR, and the approval ruleset's last-push rule refuses an approval from
@@ -391,7 +393,10 @@ Residuals:
   PR opened from it, so those branches are deleted, or checked for stray workflows, before any dev
   container runs again.
 - The `glunk-admin` installation itself holds Administration, Environments and Actions write. Only
-  the `--perms` passed to `wow-admin` keeps them off a minted token.
+  the `--perms` passed to `wow-admin` keeps them off a minted token. No Claude Code session, on
+  the host or in a container, mints a token with any of the three: only the maintainer does,
+  outside any session, and such a token falls under the key-rotation bullet below. That is a rule,
+  not a technical control: the installation still holds the permissions.
   - With Administration a token could change or delete any ruleset, or add a bypass actor to it.
     On the branch rulesets that defeats the required check and the code owner's approval. On the
     two tag rulesets of `RO-D18`, with `contents` write as well, it lets a token move, delete or
@@ -420,10 +425,25 @@ Residuals:
       commit;
     - the `release` environment's protection, the default branch, and the repo's name, owner and
       visibility;
-    - every workflow still active (`GET repos/glunk-works/resume-orchestrator/actions/workflows`),
-      and the repo's Actions settings (the default `GITHUB_TOKEN` permissions, whether Actions may
+    - the workflows, compared in both directions (`GET repos/glunk-works/resume-orchestrator/actions/workflows`)
+      against the workflow files tracked under `.github/workflows/` on `main` (read with
+      `GET repos/glunk-works/resume-orchestrator/contents/.github/workflows?ref=main`):
+      - every tracked workflow file appears in the listing with state `active`; one missing or not
+        `active` (a disabled daily `ruleset-drift`, for example) is a finding;
+      - every listed workflow whose `path` is not a tracked file on `main` is a finding, except
+        two expected kinds: Dependabot's two dynamic entries (`path`
+        `dynamic/dependabot/dependabot-updates` and `dynamic/dependabot/update-graph`; any other
+        `dynamic/` entry is a finding), and the
+        files that a workflow PR published with that token adds, if there is one;
+      - the listing cannot show a branch's edit to a workflow at a path already on `main`, because
+        the path is the same. The rule above, that the token's pushed branches are deleted or
+        checked for stray workflows, covers that. Nor can a point-in-time listing show a workflow
+        that was disabled and put back;
+    - the repo's Actions settings (the default `GITHUB_TOKEN` permissions, whether Actions may
       create or approve a PR, the allowed-actions policy and SHA pinning, and the fork-PR approval
-      policy), the auto-merge setting and secret scanning's push protection;
+      policy), the auto-merge setting (`allow_auto_merge` is `true`, written as the baseline the
+      read-back compares against, not as a claim about the live setting) and secret scanning's
+      push protection;
     - the repo's write paths: collaborators with their permission levels, pending invitations,
       teams, deploy keys, self-hosted runners (expect none) and App installations.
   - With Environments it could change that environment's secrets or variables, which `release.yml`
@@ -431,19 +451,23 @@ Residuals:
   - A change to the `release` environment's reviewers, branch policy or admin bypass needs
     Administration. It can be put back, and no endpoint the read-back calls shows what changed,
     though the web UI's audit log may. A branch workflow with `environment: release` could read
-    the release App key meanwhile. So, as a rule, a token minted with Administration,
-    Environments or Actions is treated as exposing that key: the key is rotated (the old key is
+    the release App key meanwhile. So, as a rule (the maintainer confirmed it as policy on
+    2026-11-09), a token minted with Administration, Environments or Actions is treated as exposing
+    that key: the key is rotated (the old key is
     deleted, because a new one does not revoke it, and installation tokens already minted stay
     valid for up to an hour), and the runs, deployments and releases since the mint are reviewed,
-    with the release App's `v` tag and branch activity. A token minted with `--perms` for
-    `contents`, `pull_requests` and `workflows` write, as the cutover PR's token was, holds none of
-    the three. A branch workflow it pushes can request `actions` write for its own job, but not
-    Administration or Environments.
+    with the release App's `v` tag and branch activity. Actions counts although a token with it
+    cannot read the key (a dispatch of `release.yml` still waits on the `release` environment's
+    review): it can delete workflow runs and their logs, part of the record that review of runs,
+    deployments and releases reads. A token minted with `--perms` for `contents`,
+    `pull_requests` and `workflows` write, as the cutover PR's token was, holds none of the three.
+    It can reach the same deletions (the Actions point below), and this entry leaves open
+    whether such a token should trigger rotation too.
   - With Actions it could dispatch `release.yml`, still gated by that environment's review,
     disable the daily `ruleset-drift` workflow, or delete workflow runs, logs and artifacts, which
     are evidence of what a token did. A branch workflow pushed by any token with `workflows` write
     can request `actions` write for its own job, so these are reachable without the Actions
-    permission on the token.
+    permission on the token. Such a job cannot request Administration or Environments.
 - No automated check reads the `pull_request` rule's parameters or who a ruleset's bypass actors
   are; only the manual read-back by id does.
   Run by a repo admin, `ruleset-drift.sh` reports, per ruleset, the missing types and checks,
