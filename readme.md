@@ -286,11 +286,27 @@ Contributor conventions (commits, branches, the no-fabrication rules) are in [CL
 
 A driver is a Claude Code session in the dev container that prepares and cleans up lanes. A lane is a separate git worktree and Claude Code session in the same dev container, under the same dev-App credential (the container's one token mount, `.devcontainer/devcontainer.json`); it is not isolated from the driver or from other lanes, and shares the container's home and `/tmp` volumes. Lanes build only tasks whose spec comment is already posted and approved; they draft no specs.
 
-1. `/way-of-working:lanes`, `/way-of-working:resume` and `wow-lane.ps1` all read `lanes.dir` from the committed `.ai/project.yml` on `main`; `wow-lane.ps1` fetches the Reference clone's (step 3) `origin/main` itself. A change to the key takes effect once it is merged.
+The Reference clone is a clone of this repository that no container ever opens. `wow-lane.ps1` treats it as the trusted copy of `main`.
+
+1. `/way-of-working:lanes`, `/way-of-working:resume` and `wow-lane.ps1` all read `lanes.dir` from the committed `.ai/project.yml` on `main`; `wow-lane.ps1` fetches the Reference clone's `origin/main` itself. A change to the key takes effect once it is merged.
 2. Start the driver: the maintainer runs the workbench's `wow-driver.ps1` on the host, following that tool's own help in glunk-works/claude-workbench.
-3. Start a lane: in the driver session, run `/way-of-working:lanes` (its start mode, from the main worktree). It prepares the worktree and prompt for one task and prints a host command. The maintainer runs only that `wow-lane.ps1` line, after checking that it has no arguments beyond the ones shown and nothing chained after it (`;`, `|`, `&`) and that its issue number and hash match the `prep` output, replacing `<clone>` with the clone the container opens and `<other clone>` with a different clone that no container ever opens (the Reference clone). The same skill reports on lanes and cleans up a merged one; see the skill for its inputs.
+3. Start a lane: in the driver session, run `/way-of-working:lanes` (its start mode, from the main worktree). It prepares the worktree and prompt for one task and prints a host command. The maintainer runs only that `wow-lane.ps1` line, after checking that it has no arguments beyond the ones shown and nothing chained after it (`;`, `|`, `&`) and that its issue number and hash match the `prep` output, replacing `<clone>` with the clone the container opens and `<other clone>` with a different clone, the Reference clone, defined above. The same skill reports on lanes and cleans up a merged one; see the skill for its inputs.
 4. Workflow PRs: before a workflow PR's admin token is minted, stop the dev container (which ends the driver and every lane) and run no dev or review container. As local practice, start them again only after the token is revoked and every branch it pushed is deleted or checked for stray workflows. `RO-D21` in [docs/decisions.md](docs/decisions.md) holds the rules. A lane never builds a workflow PR. Batch workflow changes, so the driver and lanes stop less often.
 5. Every task adds its `CHANGELOG.md` bullet at the same place, so with several lanes in flight expect to update the second PR's branch before it merges.
+
+## Line endings on an existing Windows clone
+
+Tracked files check out with LF line endings on every host (`.gitattributes`). A Windows host clone made before that rule still holds CRLF files on disk until it is re-checked-out once. A clone that is already LF on disk needs none of this: from its top-level folder, `git ls-files --eol` shows no `w/crlf` or `w/mixed` entry.
+
+Run every step from the clone's top-level folder, because `git rm -r --cached .` and `git ls-files` only cover the folder they are run from.
+
+1. Stop the dev container first. Step 4 of *Driver and lanes* says what stopping it ends.
+2. Confirm the working tree is clean. `git diff --name-only` and `git diff --cached --name-only` must print nothing, and `git ls-files -v` must show no file with a tag other than `H`. A lower-case tag marks an assume-unchanged file and `S` a skip-worktree file, and the re-checkout overwrites such a file's local edit. In PowerShell, `git ls-files -v | Select-String -CaseSensitive -NotMatch '^H '` prints nothing when the check passes. For a flagged file, clear the flag with `git update-index --no-assume-unchanged` or `git update-index --no-skip-worktree` followed by that file's path, so its change shows in `git diff`. If any check fails, stop and resolve the change without `git add -A` or `git add .`, and never with a commit on `main`. Then run the checks again.
+3. Confirm the checked-out commit carries the LF rule: `git check-attr eol -- readme.md` prints `readme.md: eol: lf`. If it does not and the clone is on `main`, bring it up to date with `git fetch` and then `git merge --ff-only origin/main`, never with a commit on `main`. If the clone is not on `main`, or the merge cannot fast-forward, stop. A fast-forward of a tree the previous checks found clean leaves it clean. Without the rule in the checkout, the re-checkout below writes CRLF again.
+4. Run `git rm -r --cached -q .` and then `git reset --hard`.
+5. Confirm that `git ls-files --eol` shows no `w/crlf` or `w/mixed` entry. In PowerShell, `git ls-files --eol | Select-String 'w/(crlf|mixed)'` prints nothing when the check passes.
+
+Any of these commands may print a warning that CRLF will be replaced by LF. That warning is the symptom being fixed, not a new problem. A plain `git reset --hard` on its own is not enough: it rewrites only files git sees as changed, so the rest can stay CRLF. Ignored files, such as `.env`, are left in place by these steps. Never use `git clean -x`, and never delete and re-clone a folder that holds ignored data.
 
 ## Project Structure
 
