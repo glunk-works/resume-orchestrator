@@ -279,6 +279,16 @@ uv run ruff format .          # Apply formatting
 
 Contributor conventions (commits, branches, the no-fabrication rules) are in [CLAUDE.md](CLAUDE.md).
 
+## Driver and lanes
+
+A driver is a Claude Code session in the dev container that prepares and cleans up lanes. A lane is a separate git worktree and Claude Code session in the same dev container, under the same dev-App credential (the container's one token mount, `.devcontainer/devcontainer.json`); it is not isolated from the driver or from other lanes, and shares the container's home and `/tmp` volumes. Lanes build only tasks whose spec comment is already posted and approved; they draft no specs.
+
+1. `/way-of-working:lanes`, `/way-of-working:resume` and `wow-lane.ps1` all read `lanes.dir` from the committed `.ai/project.yml` on `main`; `wow-lane.ps1` fetches the Reference clone's (step 3) `origin/main` itself. A change to the key takes effect once it is merged.
+2. Start the driver: the maintainer runs the workbench's `wow-driver.ps1` on the host, following that tool's own help in glunk-works/claude-workbench.
+3. Start a lane: in the driver session, run `/way-of-working:lanes` (its start mode, from the main worktree). It prepares the worktree and prompt for one task and prints a host command. The maintainer runs only that `wow-lane.ps1` line, after checking that it has no arguments beyond the ones shown and nothing chained after it (`;`, `|`, `&`) and that its issue number and hash match the `prep` output, replacing `<clone>` with the clone the container opens and `<other clone>` with a different clone that no container ever opens (the Reference clone). The same skill reports on lanes and cleans up a merged one; see the skill for its inputs.
+4. Workflow PRs: before a workflow PR's admin token is minted, stop the dev container (which ends the driver and every lane) and run no dev or review container. As local practice, start them again only after the token is revoked and every branch it pushed is deleted or checked for stray workflows. `RO-D21` in [docs/decisions.md](docs/decisions.md) holds the rules. A lane never builds a workflow PR. Batch workflow changes, so the driver and lanes stop less often.
+5. Every task adds its `CHANGELOG.md` bullet at the same place, so with several lanes in flight expect to update the second PR's branch before it merges.
+
 ## Project Structure
 
 The package code lives under `src/resume_optimizer/`, and its prompts and Jinja2 Markdown templates
