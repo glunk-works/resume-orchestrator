@@ -1,24 +1,23 @@
 # Next steps
 
-**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. #88's PR 1 (#148),
-#112, #113, #115 and #156 are built and merged, so `RO-D20` is on `main`, the toolchain is uv, the
-review gate and the shared dev container are live, and `.ai/project.yml` mirrors `main`'s ruleset.
+**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. #155's PR (#163) is
+merged: `lanes` and `append_only` are declared on `main`, and the readme has the *Driver and lanes*
+note. #155 stays open until its host steps are recorded.
 
 **Just done:**
-- #155's spec is posted as `glunk-dev[bot]` (comment 6741619016), and the maintainer has reacted to it.
-  - Critic pass (spec mode: `architect`, `security-critic`, `docs-consistency`): 3 rounds,
-    converged; all on their frontmatter models, no second-opinion round.
-  - The spec departs from the issue in four ways: coder lanes only (the pinned plugin has no
-    spec lanes); a `CLAUDE.md` deviations row for the release PR's non-append `CHANGELOG.md`
-    edit; no `wow-driver.ps1` parameters or record path (it defers to the tool's help); and the
-    workflow-PR step stops the dev container, as `RO-D21` requires.
-  - The PR does not close #155: four of its done-whens run after the merge, as host steps.
+- Built #155 from its approved spec comment and merged it as #163 (opened as `glunk-dev[bot]`).
+  - Critic pass (`architect`, `security-critic`, `docs-consistency`): 2 rounds, converged; all on
+    their frontmatter models, no second-opinion round. Round 1 caught a false readme step (it said
+    to update the Reference clone; `wow-lane.ps1` fetches `origin/main` itself), now fixed.
+  - Auto-merge was not armed on #163; the permission layer declined `gh pr merge --auto`.
 
-**Next:** task #155 — build #155 (adopt lanes and the driver) from its approved spec comment, in a
-fresh session on **sonnet** (coder), which the finder locates. Open the PR as `glunk-dev[bot]` with
-"Part of #155" and no `Closes:` trailer, after the critic pass. Then what remains of #88.
+**Next:** close out #155 on the host, in a driver session on **opus**: relaunch the driver with
+`wow-driver.ps1` (the readme's *Driver and lanes* section), confirm `/way-of-working:resume` prints
+`Lanes: none`, run one lane end to end on an approved-spec issue of milestone 2, record the outcomes
+in one comment on #155 and close it. Then decide what remains of #88. This carries no
+`task #N —` token on purpose: it is the maintainer's host work, so resume waits.
 
-**HITL Gate: NONE OPEN** — next gate: the code owner approves the #155 PR after its architect-review gate
+**HITL Gate: NONE OPEN** — next gate: the maintainer records the host steps on #155 and closes it
 
 **Open for the owner (non-blocking):**
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
@@ -79,11 +78,9 @@ fresh session on **sonnet** (coder), which the finder locates. Open the PR as `g
   Pushing a commit to the branch creates the head ref (PR #107).
 - The spec-mode cap of 4 fix-and-re-run rounds was hit on #113 and #115 (8 rounds). A spec for a
   multi-surface or host-procedure task may need splitting.
-- The #155 spec's last critic round left three optional tightenings out of the posted text: make
-  its "stop the dev container" done-when a grep, make "start them again" name what restarts, and
-  defer the container-stop scope to `RO-D21`. The builder may take them.
-- After #155 merges: update the host Reference clone, then the post-merge steps its PR body
-  lists, recorded in one comment on #155 before it is closed.
+- Working-tree copies of `.ai/project.yml`, `CHANGELOG.md`, `CLAUDE.md` and `readme.md` read CRLF
+  (index LF) after a branch switch in the dev container, which left the tree dirty; `git restore`
+  cleared it. Cause not found.
 - The dev container could not arm auto-merge on #159: the permission layer denied
   `gh pr merge --auto`. Arming it needs a permission rule for `gh pr merge` on this repo.
 - Under this repo's installation token, resume's ruleset check reads both rulesets but not their
