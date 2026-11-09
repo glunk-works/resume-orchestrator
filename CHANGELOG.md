@@ -16,6 +16,8 @@ All notable changes to this project are recorded here, in the
 - `generate-resume` now reports a document it was meant to write but did not find as not found,
   and fails the run for it. It used to report that document as one whose page count could not be
   measured.
+- The readme's *Line endings on an existing Windows clone* section gives the steps for the
+  one-time re-checkout that the LF line-endings bullet mentions.
 - Tracked files now check out with LF line endings on every host, whatever the host's
   `core.autocrlf` setting. An existing Windows clone needs a one-time re-checkout of its working tree
   to pick this up.
