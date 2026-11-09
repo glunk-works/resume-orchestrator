@@ -74,4 +74,4 @@ line-ending = "auto"
 
 [tool.uv]
 # A floor, not a pin: CI pins the uv binary exactly (UV_VERSION in .github/workflows/ci.yml).
-required-version = ">=0.13.7"
+required-version = ">=0.13.6"

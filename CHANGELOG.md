@@ -13,6 +13,8 @@ All notable changes to this project are recorded here, in the
 
 ## Unreleased
 
+- Contributors can now work in the shared dev container, opened through the launcher, with dependencies
+  installed by hand with `uv sync`. The local uv floor is now 0.13.6, the uv the dev image ships.
 - The development environment, lock and build now run through uv. The wheel ships the same
   modules and package data, and `__version__` now reads the installed metadata. Contributors run
   `uv sync`.

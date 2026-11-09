@@ -280,7 +280,9 @@ move lands in its own task, after which `RO-D19`'s package rename follows.
 - **uv's pin:** CI installs uv at an exact version, set in the workflow files as an `env:` value
   named `UV_VERSION`, never a repository or organization variable, which sits outside review. CI
   checks that every copy of it agrees with the `uv_build` pin in `[build-system]`.
-  `required-version` in `pyproject.toml`'s uv settings is a floor for local use, not a pin.
+  `required-version` in `pyproject.toml`'s uv settings is a floor for local use, not a pin. The
+  local floor was lowered to 0.13.6, the uv the shared dev image shipped when #115 adopted it, so the
+  container can run the project.
 - **The interpreter:** every workflow job that installs the project or its dev dependencies gets
   Python from uv, not from `actions/setup-python`. That covers every job in `ci.yml`, the advisory
   3.15 job and the `test` job that builds and smoke-tests the wheel included. If uv cannot provide
