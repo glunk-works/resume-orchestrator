@@ -456,3 +456,15 @@ Residuals:
   `main`: its deletion, a move off `active` enforcement or a change to its target.
 - `docs/` and the other rule-4 paths outside `code_paths` rest on the approval and the critic pass
   alone.
+
+## RO-D22 — A run fails when a page count cannot be measured
+
+*Decided 2026-11-09 (maintainer).*
+When a document's page count cannot be measured, `generate-resume` exits with status 1 after it
+has written every document and printed every report. It does not set those documents aside or
+rename them, because they were not refused. A refused document takes precedence: when one
+document is refused and another is unmeasured, the run exits as it does for a refused document.
+D5's render stage also fails the run when a page count cannot be measured, and D5 decides its
+file naming and handling. This extends plan §3.9's rule that render fails loudly when neither
+converter works to every failed count. **Why:** a zero exit reports a finished run although a
+document's page count was not produced, so its length limit could not be checked.

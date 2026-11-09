@@ -21,6 +21,9 @@ When you find a job you want to apply for, the engine:
 * **Python 3.14+**
 * **Pandoc** (The script will attempt to automatically download the Pandoc engine if it is not found on your system)
 * **Gemini API Key** (Get one at [Google AI Studio](https://aistudio.google.com/))
+* **A PDF converter**, to count the pages: Microsoft Word or LibreOffice (`soffice`). Plan §3.9
+  says which converter runs where, and `RO-D22` in [docs/decisions.md](docs/decisions.md) says what
+  happens when a count fails.
 
 ## Installation & Setup
 

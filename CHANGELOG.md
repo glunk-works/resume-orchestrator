@@ -13,6 +13,8 @@ All notable changes to this project are recorded here, in the
 
 ## Unreleased
 
+- `generate-resume` now exits with status 1, after writing the documents, when a document's page
+  count cannot be measured. It used to exit 0.
 - Contributors can now run a driver session and parallel coder lanes in the shared dev container, as
   the readme's *Driver and lanes* section describes.
 - Contributors can now work in the shared dev container, opened through the launcher, with dependencies

@@ -514,7 +514,8 @@ letterhead), with `python-docx` for details. Markdown is used only for `review.h
 export. PDF is produced on Windows by Word COM through the package's own converter, which starts its
 own Word and never quits one with other documents open; on macOS through `docx2pdf`; either way
 with a timeout that kills the converter's process tree. `soffice --headless` is used if it's
-installed. If neither works, render fails loudly and never estimates. pypdf
+installed. If neither works, render fails loudly and never estimates. A page count that cannot be
+measured fails the run, on the legacy path and in D5's render (`RO-D22`). pypdf
 counts the pages.
 
 **Resume:**
