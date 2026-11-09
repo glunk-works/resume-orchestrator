@@ -4,6 +4,7 @@
 # blocks on 2026-11-06, after the transfer to glunk-works, the `main-code-owner-approval` block and
 # the other check pins on 2026-11-07, and the identities ids, from `GET users/<slug>[bot]` and
 # `GET users/<login>`, on 2026-11-08. `architect-review`'s read-back is dated in the paragraph below.
+# The `verify / verify` pin was read back from ruleset 26540407 on 2026-11-09.
 # The ruleset blocks mirror a live read-back of
 # `GET /repos/glunk-works/resume-orchestrator/rules/branches/main`, the approval ruleset mirrors its
 # read-back by id, and the check names are the names GitHub reports for the required checks. Every
@@ -89,6 +90,7 @@ ruleset:
     - pr-title
     - secrets / scan
     - architect-review
+    - verify / verify
   check_integrations:
     lint: 15368
     test: 15368
@@ -98,6 +100,7 @@ ruleset:
     pr-title: 15368
     "secrets / scan": 15368
     architect-review: 15368
+    "verify / verify": 15368
 rulesets:
   - name: main-required-checks
     source: repo
@@ -111,6 +114,7 @@ rulesets:
       - pr-title
       - secrets / scan
       - architect-review
+      - verify / verify
     check_integrations:
       lint: 15368
       test: 15368
@@ -120,6 +124,7 @@ rulesets:
       pr-title: 15368
       "secrets / scan": 15368
       architect-review: 15368
+      "verify / verify": 15368
   - name: main-code-owner-approval
     source: repo
     rule_types: [deletion, non_fast_forward, pull_request]
