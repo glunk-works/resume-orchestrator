@@ -13,6 +13,9 @@ All notable changes to this project are recorded here, in the
 
 ## Unreleased
 
+- Tracked files now check out with LF line endings on every host, whatever the host's
+  `core.autocrlf` setting. An existing Windows clone needs a one-time re-checkout of its working tree
+  to pick this up.
 - `generate-resume` now exits with status 1, after writing the documents, when a document's page
   count cannot be measured. It used to exit 0.
 - Contributors can now run a driver session and parallel coder lanes in the shared dev container, as

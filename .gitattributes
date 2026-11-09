@@ -1,3 +1,5 @@
-# verify / verify rejects CR in the dev-container definition, so pin it to LF whatever the
-# checkout host's autocrlf says. Only this path: no other tracked file is renormalised.
+# Every tracked text file is LF whatever the checkout host's core.autocrlf says. text=auto leaves
+# content git detects as binary unconverted. The .devcontainer rule below stays as the stricter
+# pin: verify / verify rejects CR in the dev-container definition.
+* text=auto eol=lf
 .devcontainer/** text eol=lf
