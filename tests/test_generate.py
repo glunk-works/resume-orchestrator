@@ -1193,17 +1193,26 @@ def test_a_logged_run_carries_none_of_the_seeded_text(
     monkeypatch.setattr(generate, "page_count", refuse_page_count)
 
     setup_logging()
-    generate.generate_collateral(
-        canaries["req"], validate=True, evaluate_job=True, preserve_markdown=True
-    )
-    teardown_logging()
+    try:
+        with pytest.raises(generate.PageCountUnavailableError) as raised:
+            generate.generate_collateral(
+                canaries["req"], validate=True, evaluate_job=True, preserve_markdown=True
+            )
+    finally:
+        teardown_logging()
 
+    message: str = str(raised.value)
     written: str = (paths.log_dir() / logging_setup.LOG_FILE_NAME).read_text(encoding="utf-8")
     assert written.strip()
     stderr: str = capsys.readouterr().err
     for canary in canaries.values():
+        assert canary not in message
         assert canary not in written
         assert canary not in stderr
+    assert str(tmp_path) not in message
+    assert str(paths.runs_dir()) not in message
+    assert str(tmp_path) not in written
+    assert str(tmp_path) not in stderr
 
 
 def test_an_in_repo_runs_directory_is_refused_before_any_provider_call(

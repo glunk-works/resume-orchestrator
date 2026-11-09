@@ -111,7 +111,9 @@ def test_refused_document_is_set_aside_and_reported(
     monkeypatch.setattr(generate, "page_count", refuse)
     doc = tmp_path / "Co_Role_Resume_XX.docx"
     doc.write_bytes(b"x")
-    assert print_page_counts({"Resume": doc}) == ["Resume"]
+    counts = print_page_counts({"Resume": doc})
+    assert counts.refused == ["Resume"]
+    assert counts.unavailable == []
     assert not doc.exists()
     assert (tmp_path / "Co_Role_Resume_XX.REFUSED.docx").exists()
     assert "do not open or send the resume" in capsys.readouterr().out
@@ -124,7 +126,7 @@ def test_clean_document_is_left_alone(tmp_path: Path, monkeypatch: pytest.Monkey
     monkeypatch.setattr(generate, "page_count", lambda path: 1)
     doc = tmp_path / "a.docx"
     doc.write_bytes(b"x")
-    assert print_page_counts({"Resume": doc}) == []
+    assert print_page_counts({"Resume": doc}).refused == []
     assert doc.exists()
 
 
@@ -250,25 +252,20 @@ def test_unscannable_document_is_set_aside_before_any_conversion(
         package.writestr("word/document.xml", "<w:document/>")
     bad = tmp_path / "Co_CoverLetter_XX.docx"
     bad.write_bytes(b"not a zip")
-    refused = print_page_counts({"Resume": good, "Cover letter": bad})
+    refused = print_page_counts({"Resume": good, "Cover letter": bad}).refused
     assert refused == ["Cover letter"]
     assert (tmp_path / "Co_CoverLetter_XX.REFUSED.docx").exists()
     assert converted == [good]
 
 
-def test_generate_collateral_raises_when_a_document_is_refused(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """The pipeline itself fails, not only the printout."""
+def _stand_in_run(monkeypatch: pytest.MonkeyPatch, page_count: object) -> None:
+    """Sets up a non-master run that writes a resume and a cover letter, with a stubbed count."""
     import json
 
     from resume_optimizer import generate
     from resume_optimizer.adapters import MockLLMAdapter
 
-    def refuse(path: Path) -> int:
-        raise DocumentRefusedError("refused: document contains field")
-
-    monkeypatch.setattr(generate, "page_count", refuse)
+    monkeypatch.setattr(generate, "page_count", page_count)
     monkeypatch.setattr(generate.pypandoc, "get_pandoc_version", lambda: "3.0")
     monkeypatch.setattr(
         generate.pypandoc,
@@ -293,8 +290,127 @@ def test_generate_collateral_raises_when_a_document_is_refused(
     Path("system_prompt.txt").write_text("p")
     Path("resume_template.md").write_text("R")
     Path("cover_letter_template.md").write_text("C")
+
+
+def _run_dir() -> Path:
+    """The single run directory under RO_RUNS_DIR."""
+    (run,) = [p for p in Path(os.environ["RO_RUNS_DIR"]).iterdir() if p.is_dir()]
+    return run
+
+
+def _refuse_cover_letter_only(path: Path) -> int:
+    from resume_optimizer.render import PdfConversionError
+
+    if "CoverLetter" in path.name:
+        raise DocumentRefusedError("refused: document contains field")
+    raise PdfConversionError("no converter")
+
+
+def test_generate_collateral_raises_when_a_document_is_refused(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The pipeline itself fails, not only the printout."""
+    from resume_optimizer import generate
+
+    def refuse(path: Path) -> int:
+        raise DocumentRefusedError("refused: document contains field")
+
+    _stand_in_run(monkeypatch, refuse)
     with pytest.raises(generate.RefusedDocumentError):
         generate.generate_collateral("req text")
+
+
+def test_print_page_counts_reports_an_unmeasured_document(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failed count is unavailable, not refused, and the document keeps its name."""
+    from resume_optimizer import generate
+    from resume_optimizer.render import PdfConversionError
+
+    def fail(path: Path) -> int:
+        raise PdfConversionError("no converter")
+
+    monkeypatch.setattr(generate, "page_count", fail)
+    doc = tmp_path / "Co_Role_Resume_XX.docx"
+    doc.write_bytes(b"x")
+    counts = print_page_counts({"Resume": doc})
+    assert counts.refused == []
+    assert counts.unavailable == ["Resume"]
+    assert doc.exists()
+
+
+def test_print_page_counts_separates_refused_from_unmeasured(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from resume_optimizer import generate
+
+    monkeypatch.setattr(generate, "page_count", _refuse_cover_letter_only)
+    resume = tmp_path / "Co_Resume_XX.docx"
+    letter = tmp_path / "Co_CoverLetter_XX.docx"
+    resume.write_bytes(b"x")
+    letter.write_bytes(b"x")
+    counts = print_page_counts({"Resume": resume, "Cover letter": letter})
+    assert counts.refused == ["Cover letter"]
+    assert counts.unavailable == ["Resume"]
+    assert (tmp_path / "Co_CoverLetter_XX.REFUSED.docx").exists()
+    assert resume.exists()
+
+
+def test_main_exits_non_zero_when_a_page_count_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    from resume_optimizer import generate
+
+    def boom() -> None:
+        raise generate.PageCountUnavailableError("Page count unavailable: Resume.")
+
+    monkeypatch.setattr(generate, "_main", boom)
+    with caplog.at_level("ERROR"), pytest.raises(SystemExit) as info:
+        generate.main()
+    assert info.value.code == 1
+    assert "Page count unavailable: Resume." in capsys.readouterr().err
+    (record,) = [r for r in caplog.records if r.levelname == "ERROR"]
+    assert record.getMessage() == "A page count could not be measured."
+    assert not hasattr(record, "document")
+    assert not hasattr(record, "reason")
+
+
+def test_generate_collateral_raises_when_a_page_count_is_unavailable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Every document is written and reported, then the run fails."""
+    from resume_optimizer import generate
+    from resume_optimizer.render import PdfConversionError
+
+    def fail(path: Path) -> int:
+        raise PdfConversionError("no converter")
+
+    _stand_in_run(monkeypatch, fail)
+    with pytest.raises(generate.PageCountUnavailableError) as info:
+        generate.generate_collateral("req text")
+    run = _run_dir()
+    assert sorted(p.suffix for p in run.glob("*.docx")) == [".docx", ".docx"]
+    assert not list(run.glob("*REFUSED*"))
+    assert capsys.readouterr().out.count("no estimate is given") == 2
+    assert "Resume" in str(info.value)
+    assert "Cover letter" in str(info.value)
+    assert str(tmp_path) not in str(info.value)
+
+
+def test_a_refusal_wins_over_an_unmeasured_document(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from resume_optimizer import generate
+
+    _stand_in_run(monkeypatch, _refuse_cover_letter_only)
+    with pytest.raises(generate.RefusedDocumentError):
+        generate.generate_collateral("req text")
+    run = _run_dir()
+    assert len(list(run.glob("*CoverLetter*.REFUSED.docx"))) == 1
+    resumes = [p for p in run.glob("*Resume*.docx") if "REFUSED" not in p.name]
+    assert len(resumes) == 1
 
 
 def test_sentence_initial_title_run_is_flagged_but_ordinary_prose_is_not() -> None:

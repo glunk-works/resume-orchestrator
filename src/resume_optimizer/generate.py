@@ -8,7 +8,7 @@ import re
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import pypandoc
 
@@ -51,6 +51,17 @@ _pypandoc_logger.addHandler(PANDOC_WARNINGS)
 
 class RefusedDocumentError(RuntimeError):
     """A generated document contained content the model should not have produced."""
+
+
+class PageCountUnavailableError(RuntimeError):
+    """A document's page count could not be measured, so its length limit was not checked."""
+
+
+class PageCounts(NamedTuple):
+    """What `print_page_counts` could not clear: refused documents and unmeasured ones."""
+
+    refused: list[str]
+    unavailable: list[str]
 
 
 # Model text reaches pandoc as Markdown. Raw attributes would let it pass raw OOXML (field codes,
@@ -282,16 +293,18 @@ def _set_aside(label: str, path: Path) -> None:
     )
 
 
-def print_page_counts(documents: dict[str, Path]) -> list[str]:
+def print_page_counts(documents: dict[str, Path]) -> PageCounts:
     """Checks every document, then prints each one's real page count, or why it cannot.
 
     All documents are scanned and any refused one is set aside before a converter opens
     anything, so an interrupted run never leaves an unchecked document under a sendable name.
 
     Returns:
-        The labels of the documents that were refused.
+        A `PageCounts` with `refused`, the labels of the documents that were refused, and
+        `unavailable`, the labels of the documents whose page count could not be measured.
     """
     refused: list[str] = []
+    unavailable: list[str] = []
     for label, path in documents.items():
         if not path.exists():
             continue
@@ -317,10 +330,11 @@ def print_page_counts(documents: dict[str, Path]) -> list[str]:
         except PdfConversionError as exc:
             logger.error("Page count unavailable.", extra={"document": label, "reason": str(exc)})
             print(f"{label}: page count unavailable ({exc}); no estimate is given.")
+            unavailable.append(label)
         else:
             logger.info("Counted pages.", extra={"document": label, "pages": pages})
             print(f"{label}: {pages} page(s)")
-    return refused
+    return PageCounts(refused=refused, unavailable=unavailable)
 
 
 # The career keys `build_state.py` writes that the generation call may send. Any other key,
@@ -448,6 +462,8 @@ def generate_collateral(
 
     Raises:
         DataPathRefusedError: If a data path resolves inside a checkout of this repository.
+        RefusedDocumentError: If a generated document was refused and set aside.
+        PageCountUnavailableError: If no refused document, but a page count could not be measured.
     """
     paths.runs_dir()  # refuse a bad runs path before any provider call; the mkdir stays lazy
     # 1. Initialize our decoupled engine
@@ -752,10 +768,16 @@ def generate_collateral(
     if "cover_letter_file" in expected_docs:
         documents["Cover letter"] = out_dir / expected_docs["cover_letter_file"]
     print(f"Run directory: {out_dir}")
-    refused: list[str] = print_page_counts(documents)
-    if refused:
+    counts: PageCounts = print_page_counts(documents)
+    if counts.refused:
         raise RefusedDocumentError(
-            f"Refused: {', '.join(refused)}. Do not send them; see the warnings above."
+            f"Refused: {', '.join(counts.refused)}. Do not send them; see the warnings above."
+        )
+    if counts.unavailable:
+        raise PageCountUnavailableError(
+            f"Page count unavailable: {', '.join(counts.unavailable)}. They were not set aside, "
+            "but their page count could not be measured; the line printed above for each "
+            "document gives the reason. Measuring needs Microsoft Word or LibreOffice."
         )
     return out_dir
 
@@ -819,6 +841,10 @@ def main() -> None:
         _main()
     except RefusedDocumentError as exc:
         logger.error("A generated document was refused.")
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(1)
+    except PageCountUnavailableError as exc:
+        logger.error("A page count could not be measured.")
         print(f"ERROR: {exc}", file=sys.stderr)
         sys.exit(1)
     except paths.DataPathRefusedError as exc:
