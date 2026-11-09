@@ -5,30 +5,26 @@
 review gate and the shared dev container are live.
 
 **Just done:**
-- #115's build, [PR #153](https://github.com/glunk-works/resume-orchestrator/pull/153), merged at
-  `2957507`: the shared dev-App dev container, published as `glunk-admin[bot]` with two short-lived
-  `wow-admin` tokens (the first head failed `verify / verify`, so a second token fixed the verifier pin).
-  - Critic pass: none ran in the session that built it on the diff. The spec's own critic gate
-    converged (8 rounds, spec mode). The fresh-session `glunk-review[bot]` review of record passed on
-    head `3fbac3a`, with three non-blocking findings, filed as #154.
-  - The `RO-D21` read-backs for both tokens read clean. The in-container checks also pass: the
-    green gate, no capabilities, `NoNewPrivs`, a read-only `/run/wow`, and only the image's
-    credential helper.
-  - Deviation from the spec: the template's caller pinned the v1.5 verifier, which predates dev-App
-    mode, so the PR pins v1.6 instead. Filed upstream as 603-Identity/devcontainers#502.
-- By the maintainer's say-so, `verify / verify` is now in `main-required-checks` (done with the
-  admin `gh`, not a token), and `allow_auto_merge` is on. The broker entry for this repo is in.
+- #156's spec: the `spec-task:` comment
+  [6740470591](https://github.com/glunk-works/resume-orchestrator/issues/156#issuecomment-6740470591),
+  posted by the dev App against `main` at `cf88756` and approved by the maintainer's reaction.
+  - Critic pass (spec mode): `architect`, `security-critic`; 3 rounds; converged.
+  - It corrects the issue body: the daily `ruleset-drift` run does not report the missing mirror,
+    because `check_ruleset.py` treats checks GitHub requires beyond those declared as no drift.
+- The way-of-working plugin now loads in the dev container. Its install record was missing from
+  the per-repo home volume; `claude plugin install way-of-working@claude-workbench --scope project`
+  restores it if that volume is ever wiped.
+- The maintainer confirmed milestone 2 on 2026-11-09.
 
 **Next:** task #156 — mirror `verify / verify` (integration 15368) into both ruleset blocks of
-`.ai/project.yml`, per its approved spec. It needs a `spec-task:` comment first, which
-`/way-of-working:spec-task 156` drafts as the dev App from the container, then the maintainer's
-reaction. It is an ordinary PR: build it in the dev container as `glunk-dev[bot]`, not from a host
-session. Assigned model: **sonnet** (coder). Then #155 (adopt lanes and the driver), then what
-remains of #88. Until the mirror merges, the daily `ruleset-drift` run reports `verify / verify`
-as unmirrored.
+`.ai/project.yml`, per the approved `spec-task:` comment on #156. Build it in a fresh session in
+the dev container as `glunk-dev[bot]`, run `/way-of-working:critic-gate`, then
+`/way-of-working:ship`. Assigned model: **sonnet** (coder). Then #155 (adopt lanes and the
+driver), then what remains of #88.
 
-**HITL Gate: OPEN** — first anchor for milestone 2: the maintainer confirms the milestone, and a
-spec for #156 is drafted and reacted to. The gate after that is the maintainer approving the #156 PR.
+**HITL Gate: OPEN** — first anchor for milestone 2: this cursor had no prior anchor. The maintainer
+confirmed milestone 2 on 2026-11-09 and approved the #156 spec; the next resume still waits for
+their go on this anchor. The gate after that is the maintainer approving the #156 PR.
 
 **Open for the owner (non-blocking):**
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
