@@ -1,30 +1,24 @@
 # Next steps
 
 **Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. #88's PR 1 (#148),
-#112, #113 and #115 are built and merged, so `RO-D20` is on `main`, the toolchain is uv, and the
-review gate and the shared dev container are live.
+#112, #113, #115 and #156 are built and merged, so `RO-D20` is on `main`, the toolchain is uv, the
+review gate and the shared dev container are live, and `.ai/project.yml` mirrors `main`'s ruleset.
 
 **Just done:**
-- #156's spec: the `spec-task:` comment
-  [6740470591](https://github.com/glunk-works/resume-orchestrator/issues/156#issuecomment-6740470591),
-  posted by the dev App against `main` at `cf88756` and approved by the maintainer's reaction.
-  - Critic pass (spec mode): `architect`, `security-critic`; 3 rounds; converged.
-  - It corrects the issue body: the daily `ruleset-drift` run does not report the missing mirror,
-    because `check_ruleset.py` treats checks GitHub requires beyond those declared as no drift.
-- The way-of-working plugin now loads in the dev container. Its install record was missing from
-  the per-repo home volume; `claude plugin install way-of-working@claude-workbench --scope project`
-  restores it if that volume is ever wiped.
-- The maintainer confirmed milestone 2 on 2026-11-09.
+- #156 built and merged as #159: `verify / verify` (integration 15368) is mirrored in both ruleset
+  blocks of `.ai/project.yml`, read back from ruleset 26540407 first.
+  - Critic pass (`architect`, `security-critic`): 1 round, converged, tightenings only; both on
+    their frontmatter models, no second-opinion round.
+  - The dev container could not arm auto-merge: the permission layer denied `gh pr merge --auto`.
+    The maintainer approved and merged by hand. Arming it needs a permission rule for
+    `gh pr merge` on this repo.
 
-**Next:** task #156 — mirror `verify / verify` (integration 15368) into both ruleset blocks of
-`.ai/project.yml`, per the approved `spec-task:` comment on #156. Build it in a fresh session in
-the dev container as `glunk-dev[bot]`, run `/way-of-working:critic-gate`, then
-`/way-of-working:ship`. Assigned model: **sonnet** (coder). Then #155 (adopt lanes and the
-driver), then what remains of #88.
+**Next:** task #155 — draft the spec comment for #155 (adopt lanes and the driver) with
+`/way-of-working:spec-task 155`, in a session on **opus** (architect); the finder shows none yet.
+A maintainer then reacts to it, and a later fresh session on sonnet builds from it. Then what
+remains of #88.
 
-**HITL Gate: OPEN** — first anchor for milestone 2: this cursor had no prior anchor. The maintainer
-confirmed milestone 2 on 2026-11-09 and approved the #156 spec; the next resume still waits for
-their go on this anchor. The gate after that is the maintainer approving the #156 PR.
+**HITL Gate: NONE OPEN** — next gate: the maintainer reacts to the #155 spec comment
 
 **Open for the owner (non-blocking):**
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
