@@ -2,17 +2,17 @@
 # Full key reference: reference/project-schema.md in glunk-works/claude-workbench at the pinned tag.
 # Live settings in this file were read back from GitHub: `repo` and the `main-required-checks`
 # blocks on 2026-11-06, after the transfer to glunk-works, the `main-code-owner-approval` block and
-# the check pins on 2026-11-07, and the identities ids, from `GET users/<slug>[bot]` and
-# `GET users/<login>`, on 2026-11-08. Except for `architect-review`, which the next paragraph
-# covers, the ruleset blocks mirror a live read-back of
+# the other check pins on 2026-11-07, and the identities ids, from `GET users/<slug>[bot]` and
+# `GET users/<login>`, on 2026-11-08. `architect-review`'s read-back is dated in the paragraph below.
+# The ruleset blocks mirror a live read-back of
 # `GET /repos/glunk-works/resume-orchestrator/rules/branches/main`, the approval ruleset mirrors its
 # read-back by id, and the check names are the names GitHub reports for the required checks. Every
 # other value is a decision recorded in this repo, not a read-back.
 #
 # `architect-review` and its pin were mirrored here by PR 1 of #88 ahead of GitHub requiring them.
-# The maintainer adds the check to `main-required-checks` at step 1 of that issue's After PR 1
-# merges. That order is reference/cutover.md's for a repo whose ruleset does not yet require the
-# check. Until step 1 the daily ruleset-drift run reports it missing; that is expected, not drift.
+# The check was in `main-required-checks` by 2026-11-09, when a read of ruleset 26540407 showed it
+# pinned to 15368. That mirror-first order was the one reference/cutover.md gives for a repo whose
+# ruleset did not yet require the check.
 
 # ── identity ─────────────────────────────────────────────────────────────────
 repo: glunk-works/resume-orchestrator
@@ -49,6 +49,7 @@ code_paths:
   - src/
   - tests/
   - .claude/
+  - .devcontainer/          # the container definition is a trust boundary, so a change to it gets the review gate
   - CLAUDE.md               # the agent instructions change agent behaviour as much as .claude/ does
   - .github/
   - .ai/project.yml         # the gate reads the default branch's copy; an edit to it needs a review
@@ -59,7 +60,7 @@ code_paths:
   - .pre-commit-config.yaml
   - betterleaks.toml        # absent on purpose: the org scan reads it, and the ignore file below, from the
   - .betterleaksignore      # PR's base commit, so a change that silences it needs a critic's look
-  - .gitattributes          # likewise absent: it can hide files from a scan
+  - .gitattributes          # holds only the dev-container LF rule; it can still hide files from a scan, so a change needs a critic's look
   - tune_template.py        # stays until D5 removes it
 
 # ── the local green gate ─────────────────────────────────────────────────────
@@ -75,8 +76,7 @@ gates:
 # `GET /repos/glunk-works/resume-orchestrator/rulesets/26540407`), targeting the default branch.
 # `check_integrations` pins each check to 15368 (GitHub Actions). `main-code-owner-approval` holds the
 # code owner's approval (ruleset id 26770416, read back by id on 2026-11-07).
-# A new check goes to GitHub first and is mirrored here second, except as the header's
-# `architect-review` paragraph says.
+# A new check goes to GitHub first and is mirrored here second.
 ruleset:
   name: main-required-checks
   rule_types: [deletion, non_fast_forward, pull_request, required_status_checks]

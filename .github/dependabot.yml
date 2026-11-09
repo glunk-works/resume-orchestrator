@@ -35,3 +35,18 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+
+  # Monitor the dev-container image pin (the FROM line's tag and digest in .devcontainer/Dockerfile).
+  # A bump touches code_paths, so it meets the code owner's approval (main-code-owner-approval) and
+  # the architect-review gate. A Dependabot PR body does not carry the Build images run that
+  # produced the new digest: the reviewer looks that run up and checks the digest's provenance.
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "chore"
+      include: "scope"

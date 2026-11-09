@@ -1,0 +1,3 @@
+# verify / verify rejects CR in the dev-container definition, so pin it to LF whatever the
+# checkout host's autocrlf says. Only this path: no other tracked file is renormalised.
+.devcontainer/** text eol=lf
