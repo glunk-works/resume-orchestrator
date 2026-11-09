@@ -54,14 +54,18 @@ class RefusedDocumentError(RuntimeError):
 
 
 class PageCountUnavailableError(RuntimeError):
-    """A document's page count could not be measured, so its length limit was not checked."""
+    """A document's page count could not be measured, so its length limit was not checked.
+
+    Also raised when an expected document was not found when page counts were taken.
+    """
 
 
 class PageCounts(NamedTuple):
-    """What `print_page_counts` could not clear: refused documents and unmeasured ones."""
+    """What `print_page_counts` could not clear: refused, unmeasured and missing documents."""
 
     refused: list[str]
     unavailable: list[str]
+    missing: list[str]
 
 
 # Model text reaches pandoc as Markdown. Raw attributes would let it pass raw OOXML (field codes,
@@ -301,12 +305,17 @@ def print_page_counts(documents: dict[str, Path]) -> PageCounts:
 
     Returns:
         A `PageCounts` with `refused`, the labels of the documents that were refused, and
-        `unavailable`, the labels of the documents whose page count could not be measured.
+        `unavailable`, the labels of the documents whose page count could not be measured, and
+        `missing`, the labels of the expected documents that were not found.
     """
     refused: list[str] = []
     unavailable: list[str] = []
+    missing: list[str] = []
     for label, path in documents.items():
         if not path.exists():
+            logger.error("Document not found.", extra={"document": label})
+            print(f"{label}: page count unavailable (the document was not found).")
+            missing.append(label)
             continue
         try:
             active: list[str] = scan_for_active_content(path)
@@ -318,7 +327,7 @@ def print_page_counts(documents: dict[str, Path]) -> PageCounts:
             refused.append(label)
             _set_aside(label, path)
     for label, path in documents.items():
-        if label in refused:
+        if label in refused or label in missing:
             continue
         try:
             pages: int = page_count(path)
@@ -334,7 +343,7 @@ def print_page_counts(documents: dict[str, Path]) -> PageCounts:
         else:
             logger.info("Counted pages.", extra={"document": label, "pages": pages})
             print(f"{label}: {pages} page(s)")
-    return PageCounts(refused=refused, unavailable=unavailable)
+    return PageCounts(refused=refused, unavailable=unavailable, missing=missing)
 
 
 # The career keys `build_state.py` writes that the generation call may send. Any other key,
@@ -463,7 +472,8 @@ def generate_collateral(
     Raises:
         DataPathRefusedError: If a data path resolves inside a checkout of this repository.
         RefusedDocumentError: If a generated document was refused and set aside.
-        PageCountUnavailableError: If no refused document, but a page count could not be measured.
+        PageCountUnavailableError: If no refused document, but an expected document was not
+            found or a page count could not be measured.
     """
     paths.runs_dir()  # refuse a bad runs path before any provider call; the mkdir stays lazy
     # 1. Initialize our decoupled engine
@@ -773,12 +783,20 @@ def generate_collateral(
         raise RefusedDocumentError(
             f"Refused: {', '.join(counts.refused)}. Do not send them; see the warnings above."
         )
-    if counts.unavailable:
-        raise PageCountUnavailableError(
-            f"Page count unavailable: {', '.join(counts.unavailable)}. They were not set aside, "
-            "but their page count could not be measured; the line printed above for each "
-            "document gives the reason. Measuring needs Microsoft Word or LibreOffice."
-        )
+    if counts.missing or counts.unavailable:
+        parts: list[str] = []
+        if counts.missing:
+            parts.append(
+                f"Not found: {', '.join(counts.missing)}. "
+                "The run expected these documents but did not find them."
+            )
+        if counts.unavailable:
+            parts.append(
+                f"Page count unavailable: {', '.join(counts.unavailable)}. They were not set "
+                "aside, but their page count could not be measured; the line printed above for "
+                "each document gives the reason. Measuring needs Microsoft Word or LibreOffice."
+            )
+        raise PageCountUnavailableError(" ".join(parts))
     return out_dir
 
 

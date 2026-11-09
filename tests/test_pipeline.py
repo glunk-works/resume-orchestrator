@@ -57,6 +57,11 @@ def test_resume_generation_pipeline_success(
     # MOCK PANDOC VERSION TO PREVENT DOWNLOAD ATTEMPT
     monkeypatch.setattr("resume_optimizer.generate.pypandoc.get_pandoc_version", lambda: "2.0")
 
+    # The mocked conversion writes its output, so both documents exist when pages are counted.
+    mock_pandoc_convert.side_effect = lambda input_file, to, outputfile, **kw: Path(
+        outputfile
+    ).write_bytes(b"x")
+
     # Never convert a real document: stand in for Word and LibreOffice.
     monkeypatch.setattr("resume_optimizer.generate.page_count", lambda path: 2)
 
