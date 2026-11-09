@@ -13,6 +13,9 @@ All notable changes to this project are recorded here, in the
 
 ## Unreleased
 
+- `generate-resume` now reports a document it was meant to write but did not find as not found,
+  and fails the run for it. It used to report that document as one whose page count could not be
+  measured.
 - Tracked files now check out with LF line endings on every host, whatever the host's
   `core.autocrlf` setting. An existing Windows clone needs a one-time re-checkout of its working tree
   to pick this up.

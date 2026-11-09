@@ -259,7 +259,11 @@ def test_unscannable_document_is_set_aside_before_any_conversion(
 
 
 def _stand_in_run(monkeypatch: pytest.MonkeyPatch, page_count: object) -> None:
-    """Sets up a non-master run that writes a resume and a cover letter, with a stubbed count."""
+    """Sets up a run that writes a resume and a cover letter, with a stubbed count.
+
+    The run is non-master unless the test then calls `generate_collateral` with
+    `master_mode=True`.
+    """
     import json
 
     from resume_optimizer import generate
@@ -288,6 +292,7 @@ def _stand_in_run(monkeypatch: pytest.MonkeyPatch, page_count: object) -> None:
     monkeypatch.setattr(generate, "get_llm_engine", lambda *a, **k: adapter)
     Path("ledger/master_data.json").write_text(json.dumps({"contact": {"name": "Test Person"}}))
     Path("system_prompt.txt").write_text("p")
+    Path("master_prompt.txt").write_text("p")
     Path("resume_template.md").write_text("R")
     Path("cover_letter_template.md").write_text("C")
 
@@ -446,3 +451,106 @@ def test_yaml_block_in_model_text_is_not_parsed_as_metadata() -> None:
     assert PANDOC_INPUT_FORMAT.startswith("markdown")
     assert "-yaml_metadata_block" in PANDOC_INPUT_FORMAT
     assert "-raw_attribute" in PANDOC_INPUT_FORMAT
+
+
+def _skip_cover_letter(input_file: str, fmt: str, outputfile: str, **kw: object) -> None:
+    """A stand-in conversion that never writes the cover letter."""
+    if "CoverLetter" not in Path(outputfile).name:
+        Path(outputfile).write_bytes(b"x")
+
+
+def test_print_page_counts_reports_a_missing_document(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A document that was never written is missing, and neither scan nor count sees it."""
+    from resume_optimizer import generate
+
+    def never(path: Path) -> int:
+        raise AssertionError("must not be called for a missing document")
+
+    monkeypatch.setattr(generate, "page_count", never)
+    monkeypatch.setattr(generate, "scan_for_active_content", never)
+    doc = tmp_path / "never_written.docx"
+    counts = print_page_counts({"Resume": doc})
+    assert counts.missing == ["Resume"]
+    assert counts.refused == []
+    assert counts.unavailable == []
+    out = capsys.readouterr().out
+    assert "Resume: page count unavailable (the document was not found)." in out
+    assert str(doc) not in out
+
+
+def test_generate_collateral_fails_when_an_expected_document_was_not_written(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    from resume_optimizer import generate
+
+    _stand_in_run(monkeypatch, lambda path: 1)
+    monkeypatch.setattr(generate.pypandoc, "convert_file", _skip_cover_letter)
+    with caplog.at_level("ERROR"), pytest.raises(generate.PageCountUnavailableError) as info:
+        generate.generate_collateral("req text")
+    message = str(info.value)
+    assert "Cover letter" in message
+    for forbidden in (str(tmp_path), "Acme", "CoverLetter"):
+        assert forbidden not in message
+    run = _run_dir()
+    assert len(list(run.glob("*.docx"))) == 1
+    out = capsys.readouterr().out
+    assert "Resume: 1 page(s)" in out
+    (line,) = [ln for ln in out.splitlines() if ln.startswith("Cover letter: page count")]
+    assert "the document was not found" in line
+    assert "CoverLetter" not in line
+    assert str(run) not in line
+    (record,) = [r for r in caplog.records if r.getMessage() == "Document not found."]
+    assert record.document == "Cover letter"
+    assert not hasattr(record, "reason")
+
+
+def test_a_refusal_wins_over_a_missing_document(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from resume_optimizer import generate
+
+    def refuse(path: Path) -> int:
+        raise DocumentRefusedError("refused: document contains field")
+
+    _stand_in_run(monkeypatch, refuse)
+    monkeypatch.setattr(generate.pypandoc, "convert_file", _skip_cover_letter)
+    with pytest.raises(generate.RefusedDocumentError):
+        generate.generate_collateral("req text")
+    assert len(list(_run_dir().glob("*Resume*.REFUSED.docx"))) == 1
+    out = capsys.readouterr().out
+    assert "Cover letter: page count unavailable (the document was not found)." in out
+    assert not list(_run_dir().glob("*CoverLetter*"))
+
+
+def test_a_run_without_a_cover_letter_still_succeeds(monkeypatch: pytest.MonkeyPatch) -> None:
+    from resume_optimizer import generate
+
+    _stand_in_run(monkeypatch, lambda path: 1)
+    run = generate.generate_collateral("req text", master_mode=True)
+    assert run.is_dir()
+    assert not list(run.glob("*CoverLetter*"))
+
+
+def test_generate_collateral_reports_missing_and_unmeasured_together(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from resume_optimizer import generate
+    from resume_optimizer.render import PdfConversionError
+
+    def fail(path: Path) -> int:
+        raise PdfConversionError("no converter")
+
+    _stand_in_run(monkeypatch, fail)
+    monkeypatch.setattr(generate.pypandoc, "convert_file", _skip_cover_letter)
+    with pytest.raises(generate.PageCountUnavailableError) as info:
+        generate.generate_collateral("req text")
+    message = str(info.value)
+    assert message.startswith("Not found: Cover letter. ")
+    assert "Page count unavailable: Resume." in message
+    assert str(tmp_path) not in message
+    assert "Acme" not in message
