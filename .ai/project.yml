@@ -158,7 +158,7 @@ models:
   second_opinion: null   # no different-model round offered by default.
 
 # ── the sprint-orchestrator loop ─────────────────────────────────────────────
-orchestration: null   # the loop never dispatches into this repo.
+orchestration: null   # the loop never dispatches into this repo. The driver and lanes are not the org's loop orchestrator, so adopting them adds no `orchestration` block.
 
 # ── declared identities ──────────────────────────────────────────────────────
 # Trust is by numeric id. Each App's id is the bot account's user id from `GET users/<slug>[bot]`,
@@ -170,3 +170,16 @@ identities:
   dev_app: { login: "glunk-dev[bot]", id: 339840170, commit_route: api }
   reviewer_app: { login: "glunk-review[bot]", id: 339841158 }
   loop_app: { login: "glunk-loop[bot]", id: 338193635 }
+
+# ── coder lanes ──────────────────────────────────────────────────────────────
+# The dev container mounts `/tmp` as a named volume keyed by the checkout folder name
+# (`.devcontainer/devcontainer.json`), so lane worktrees survive a container restart. The layout
+# contract is in the plugin's `reference/project-schema.md`, section `lanes`.
+lanes:
+  dir: /tmp/lanes
+
+# ── append-only files ────────────────────────────────────────────────────────
+# A task spec here only adds one bullet to `CHANGELOG.md`, as the first bullet under
+# `## Unreleased`. The release PR is the exception: see `CLAUDE.md`, *Deviations and known gaps*.
+append_only:
+  - CHANGELOG.md

@@ -13,6 +13,8 @@ All notable changes to this project are recorded here, in the
 
 ## Unreleased
 
+- Contributors can now run a driver session and parallel coder lanes in the shared dev container, as
+  the readme's *Driver and lanes* section describes.
 - Contributors can now work in the shared dev container, opened through the launcher, with dependencies
   installed by hand with `uv sync`. The local uv floor is now 0.13.6, the uv the dev image ships.
 - The development environment, lock and build now run through uv. The wheel ships the same

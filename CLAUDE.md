@@ -16,6 +16,7 @@ This repo follows the `glunk-works` way of working: the `way-of-working` plugin 
 green gate, the rulesets, the identities, agents and models. **Session flow:**
 - **Start:** run `/way-of-working:resume`. It rehydrates from `.ai/next-steps.md` and
   `.ai/state.json`, never from memory.
+- **Parallel lanes:** see the readme's *Driver and lanes* section.
 - **Before a PR:** run `/way-of-working:critic-gate` on every diff.
 - **To open the PR:** run `/way-of-working:ship`. It does not open a workflow PR; the HITL bullet
   below says who does.
@@ -168,6 +169,7 @@ repo rather than suppressing the rule.
 | No `sprint/NN-slug` branches: one `<type>/<issue#>-<slug>` branch per issue, with sprints as milestones | permanent; watch `ship` and `archive-sprint` for assumptions about `sprint/` branches |
 | A workflow PR is built by a host session and published as `glunk-admin[bot]` with a short-lived token, not through `/way-of-working:ship` (`RO-D21`) | the plugin can open a workflow PR itself |
 | The legacy generator sends career data to the provider `LLM_PROVIDER` selects (Gemini by default), before `RO-D13`'s allowlist exists; the generation and ATS calls carry no contact block, but `--score-job` still sends the `Pref_*` preferences, to the provider `LLM_PROVIDER` selects like the other calls | F4 retires the path |
+| `append_only` lists `CHANGELOG.md`, although the release PR (readme *Releasing*, step 1) moves its bullets into a version section rather than appending. A release task's spec must still carry the `**(append)**` marker, because `spec-shape.sh` requires it for every listed file the spec's *Files touched* names, and the marker skips the freshness check. So that spec's text states the edit is not an append, and the release PR's builder checks `CHANGELOG.md` against `main` by hand | permanent, unless the plugin gains a way to exempt one spec from the append rule |
 
 ## Load-bearing docs
 
