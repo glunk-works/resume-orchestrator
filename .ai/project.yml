@@ -5,10 +5,12 @@
 # the other check pins on 2026-11-07, and the identities ids, from `GET users/<slug>[bot]` and
 # `GET users/<login>`, on 2026-11-08. `architect-review`'s read-back is dated in the paragraph below.
 # The `verify / verify` pin was read back from ruleset 26540407 on 2026-11-09.
-# The ruleset blocks mirror a live read-back of
+# The `main-required-checks` blocks mirror a live read-back of
 # `GET /repos/glunk-works/resume-orchestrator/rules/branches/main`, the approval ruleset mirrors its
-# read-back by id, and the check names are the names GitHub reports for the required checks. Every
-# other value is a decision recorded in this repo, not a read-back.
+# read-back by id, and the check names are the names GitHub reports for the required checks.
+# `review.ci_gate.header` and `review.ci_gate.attestation` are copied from the plugin schema, as the
+# review gate's own comment block says: pasted, never retyped. Every other value is a decision
+# recorded in this repo, not a read-back.
 #
 # `architect-review` and its pin were mirrored here by PR 1 of #88 ahead of GitHub requiring them.
 # The check was in `main-required-checks` by 2026-11-09, when a read of ruleset 26540407 showed it
