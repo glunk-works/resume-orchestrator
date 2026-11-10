@@ -486,8 +486,12 @@ Residuals:
 *Decided 2026-11-09 (maintainer).*
 When a document's page count cannot be measured, `generate-resume` exits with status 1 after it
 has written every document and printed every report. It does not set those documents aside or
-rename them, because they were not refused. A refused document takes precedence: when one
-document is refused and another is unmeasured, the run exits as it does for a refused document.
+rename them, because they were not refused. `generate-resume` also exits with status 1 in the
+same way when an expected document is not found when page counts are taken, after every
+document it did write has been reported. When documents are both missing and unmeasured, it
+fails once, with a message that names the missing ones first and then the unmeasured ones. A
+refused document takes precedence: when one document is refused and another is missing or
+unmeasured, the run exits as it does for a refused document.
 D5's render stage also fails the run when a page count cannot be measured, and D5 decides its
 file naming and handling. This extends plan §3.9's rule that render fails loudly when neither
 converter works to every failed count. **Why:** a zero exit reports a finished run although a
