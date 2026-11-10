@@ -1,31 +1,28 @@
 # Next steps
 
-**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. The first lane ran
-end to end: #75 was built in a lane and merged as #166. #155 and #88 are the milestone's open issues.
+**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. No lanes in flight.
+The milestone's build order and **Lanes:** line say what is open and what each item waits on.
 
 **Just done:**
-- Driver session on **opus**: `/way-of-working:resume` printed `Lanes: none`. #75 was moved from
-  S07 into S02. Its spec was drafted by a `wow-lane.ps1 -Spec 75` session (critic gate: 3 rounds,
-  converged) and approved. The lane, prepped with `lane.sh prep`, built #75 and shipped #166 as
-  `glunk-dev[bot]`. The architect review passed with two non-blocking findings, now tracked in #167.
-  The maintainer merged #166 (2c60b51), and `lane.sh done 75` cleaned up the lane.
-- A driver retro and a feature audit of the plugin against this repo became the cutover feedback.
-  It was relayed upstream through #169, which is closed and names the workbench issues.
-  claude-workbench#1349 is closed.
-- Filed #168 (pin line endings to LF across the repo; land it when no lane is in flight).
+- Driver session on **opus**. #155 and #88 were already closed with their outcome comments, so the
+  old next action was moot. Removed the merged #174 and #176 lanes.
+- `/way-of-working:plan-sprint`: placed #152, #150, #182, #187, #149 and #151 on S02, then #190 and
+  #191 from the #188 and #189 reviews; closed #183 and #185 as duplicates of #182 and #187.
+- Checked the backlog against the plugin: #152 and #171 wait on glunk-works/claude-workbench#1413
+  and #1379, #149 on #1414 (filed upstream from a host session); all three carry `status/blocked`.
+- #172 unblocked by #186 (dev image uv 0.13.7, confirmed on the host); its spec was redrafted and
+  built: #188 (ef52aa9, `RO-D23`). #150 built: #189 (2ec3162). Both lanes cleaned up.
 - No code was written in this session, so it had no critic pass of its own.
 
-**Next:** close out #155 in a driver session on **opus**: post one comment recording the host steps
-and the first lane run (#75, PR #166, feedback relayed via #169), close #155, then decide with the
-maintainer what remains of #88. #88's approved spec reads `stale` and touches a workflow file, so a
-lane cannot build it. This line carries no `task #N —` token on purpose, so resume waits.
+**Next:** in a driver session on **opus**: once the maintainer has reacted on #182, #187 and #190,
+hand over one `wow-lane.ps1 -Spec N` line per issue with the full clone paths, review each posted
+spec, then prep its lane. #152, #171, #191 and #149 stay blocked upstream; #151 is the maintainer's
+manual check, its result relayed to claude-workbench#1414. This line carries no `task #N —` token
+on purpose, so resume waits.
 
-**HITL Gate: NONE OPEN** — next gate: the maintainer confirms the #155 outcome comment and scopes what remains of #88
+**HITL Gate: NONE OPEN** — next gate: the maintainer reacts on 182, 187 and 190 so their specs can be drafted
 
 **Open for the owner (non-blocking):**
-- Milestone descriptions are stale after #75's move: S07's Build order still lists #75, and S02's
-  has neither #75 nor a *Lanes* line (`lane-groups.sh`). #167 and #168 have no milestone. All of
-  this is a `/way-of-working:plan-sprint` pass, run when the maintainer schedules it.
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
   GitHub repo description). Pick an owner.
 - `RO-D18` covers tags but not release assets: an account with write access can replace a
@@ -44,16 +41,15 @@ lane cannot build it. This line carries no `task #N —` token on purpose, so re
 - The Sheet CSV export in #34 (on S03), which blocks C3.
 - The `depends_on` markers on #52, #53, #54 (S06) and #55 (S07) name issues in other milestones, so
   `plan-depends.sh` reads each as waiting on every earlier item. Worth its own backlog issue.
-- Decide whether to delete or salvage the local branches `docs/sync-cursor-s02-b2-spec` and
-  `fix/73-converter-safety`. Each tip has commits that no merged PR carries.
 - The ruff version is pinned twice, in `pyproject.toml` and `.pre-commit-config.yaml`.
   Dependabot bumps each through a different ecosystem (#110), so a ruff bump arrives as two PRs:
   merge them together. A check that compares the pins is a possible follow-up. Check the first
   `pre-commit` Dependabot PR's title against `pr-title`'s length cap, and the first `docker` one's
   too: its default title is likely over the 72-character cap.
 - Watch the first Dependabot `uv` run: it may write a newer `uv.lock` `revision` that fails the
-  `UV_LOCKED` jobs, and a `uv_build` bump fails `check_uv_pin` until `UV_VERSION` is bumped to match.
-  The local uv floor is now below CI's exact pin, and nothing compares them (#154).
+  `UV_LOCKED` jobs, and a `uv_build` bump fails `check_uv_pin` until `UV_VERSION` and the local
+  uv floor are both bumped to match (`RO-D23`). A floor bump needs a dev image whose uv meets it,
+  and a `UV_VERSION` bump is a host workflow PR (`RO-D21`).
 - Tightenings the critics raised on #113 and the build left out, as outside its spec: an explicit
   `checksum:` for `setup-uv`, requiring `[build-system].requires` to be exactly the one pin, a
   hashed install for the wheel smoke test, and a changelog note that the `dev` extra is gone.
