@@ -1,12 +1,14 @@
-"""Checks that CI's uv binary and the `uv_build` build backend are pinned to one version.
+"""Checks that CI's uv binary, the `uv_build` backend and the local uv floor share one version.
 
 Usage: check_uv_pin.py <pyproject.toml> <expected version> <`uv --version` text>
 
-It parses `[build-system]` with `tomllib` and uses the standard library only. It makes no
+It parses `[build-system]` and the `[tool.uv]` floor with `tomllib`, refuses a `uv.toml` beside
+the pyproject file, and uses the standard library only. It makes no
 network or subprocess calls. Each failure prints one line naming only the check that failed,
 never a traceback, and exits 1.
 """
 
+import os
 import re
 import sys
 import tomllib
@@ -17,6 +19,7 @@ NUMBER: str = r"(?:0|[1-9][0-9]*)"
 VERSION: re.Pattern[str] = re.compile(rf"{NUMBER}\.{NUMBER}\.{NUMBER}")
 PIN: re.Pattern[str] = re.compile(r"uv_build==([0-9]+\.[0-9]+\.[0-9]+)")
 SEPARATORS: re.Pattern[str] = re.compile(r"[-_.]+")
+FLOOR: re.Pattern[str] = re.compile(rf">=({NUMBER}\.{NUMBER}\.{NUMBER})")
 NAME: re.Pattern[str] = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 
 
@@ -33,7 +36,7 @@ def normalised_name(requirement: str) -> str:
 
 
 def check(pyproject: Path, expected: str, uv_text: str) -> None:
-    """Raises Failure unless the pin, the backend and both versions agree."""
+    """Raises Failure unless the pin, the backend, the floor and both versions agree."""
     data: dict[str, Any] = tomllib.loads(pyproject.read_text(encoding="utf-8"))
     build: Any = data.get("build-system")
     if not isinstance(build, dict):
@@ -57,6 +60,20 @@ def check(pyproject: Path, expected: str, uv_text: str) -> None:
     fields: list[str] = uv_text.split()
     if len(fields) < 2 or fields[1] != version:
         raise Failure("the uv --version output differs from the uv_build pin")
+    if os.path.lexists(pyproject.parent / "uv.toml"):
+        raise Failure("a uv.toml beside pyproject.toml would override [tool.uv]")
+    tool: Any = data.get("tool")
+    uv: Any = tool.get("uv") if isinstance(tool, dict) else None
+    if not isinstance(uv, dict):
+        raise Failure("no [tool.uv] table")
+    floor: Any = uv.get("required-version")
+    if not isinstance(floor, str):
+        raise Failure("no [tool.uv].required-version string")
+    floored: re.Match[str] | None = FLOOR.fullmatch(floor)
+    if floored is None:
+        raise Failure("[tool.uv].required-version must be exactly >=X.Y.Z")
+    if floored.group(1) != version:
+        raise Failure("the uv floor in required-version differs from the uv_build pin")
 
 
 def main(argv: list[str]) -> int:

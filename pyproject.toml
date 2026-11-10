@@ -73,5 +73,6 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.uv]
-# A floor, not a pin: CI pins the uv binary exactly (UV_VERSION in .github/workflows/ci.yml).
-required-version = ">=0.13.6"
+# The floor equals CI's pinned uv (UV_VERSION in .github/workflows/ci.yml); check_uv_pin.py fails
+# CI when they differ.
+required-version = ">=0.13.7"
