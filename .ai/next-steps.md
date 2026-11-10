@@ -1,26 +1,25 @@
 # Next steps
 
-**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. No lanes in flight.
-The milestone's build order and **Lanes:** line say what is open and what each item waits on.
+**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. No lanes in flight,
+and no open task on the milestone can run as one. Its build order and **Lanes:** line say what
+each open item waits on.
 
 **Just done:**
-- Driver session on **opus**. #155 and #88 were already closed with their outcome comments, so the
-  old next action was moot. Removed the merged #174 and #176 lanes.
-- `/way-of-working:plan-sprint`: placed #152, #150, #182, #187, #149 and #151 on S02, then #190 and
-  #191 from the #188 and #189 reviews; closed #183 and #185 as duplicates of #182 and #187.
-- Checked the backlog against the plugin: #152 and #171 wait on glunk-works/claude-workbench#1413
-  and #1379, #149 on #1414 (filed upstream from a host session); all three carry `status/blocked`.
-- #172 unblocked by #186 (dev image uv 0.13.7, confirmed on the host); its spec was redrafted and
-  built: #188 (ef52aa9, `RO-D23`). #150 built: #189 (2ec3162). Both lanes cleaned up.
+- Driver session on **opus**. Specs for #182, #187 and #190 drafted in host spec sessions,
+  reviewed by the driver against the spec commit, and approved by the maintainer.
+- Three parallel lanes built them: #195 (485f630, #182), #193 (711ce8a, #187) and #194 (dec0d1a,
+  #190). #193 and #195 passed the fresh-session architect review with no findings; #194 touched
+  no `code_paths`. All three merged, their issues closed, and their lanes were cleaned up.
+- Milestone 2's **Lanes:** line now records that no lane is in flight.
 - No code was written in this session, so it had no critic pass of its own.
 
-**Next:** in a driver session on **opus**: once the maintainer has reacted on #182, #187 and #190,
-hand over one `wow-lane.ps1 -Spec N` line per issue with the full clone paths, review each posted
-spec, then prep its lane. #152, #171, #191 and #149 stay blocked upstream; #151 is the maintainer's
-manual check, its result relayed to claude-workbench#1414. This line carries no `task #N —` token
-on purpose, so resume waits.
+**Next:** in a driver session on **opus**: S02 has no lane-buildable task. #191 edits a workflow
+file, so it waits for the host workflow session that builds #152 and #171, which stay blocked on
+glunk-works/claude-workbench#1413 and #1379; #149 is blocked on #1414; #151 is the maintainer's
+audit-log check, its result relayed to claude-workbench#1414. When one unblocks, draft its spec or
+start that host session. This line carries no `task #N —` token on purpose, so resume waits.
 
-**HITL Gate: NONE OPEN** — next gate: the maintainer reacts on 182, 187 and 190 so their specs can be drafted
+**HITL Gate: NONE OPEN** — next gate: the maintainer relays the 151 audit-log result, or an upstream plugin fix unblocks 152, 171 and 149
 
 **Open for the owner (non-blocking):**
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
@@ -89,6 +88,8 @@ on purpose, so resume waits.
   bypass actors, so it prints inconclusive.
 - A workflow PR's build runs in a fresh host clone: the publish script added a `[branch]` tracking
   section to `.git/config` that the spec did not expect. Worth a line in the next spec's preflight.
+- `lane.sh prep` uses its `BRANCH` argument verbatim and does not add the issue number, so the
+  driver must pass `<type>/<issue#>-<slug>` itself. Worth an upstream check in the plugin.
 
 **Pointers:**
 - the plan: [docs/proposals/pipeline-plan.md](../docs/proposals/pipeline-plan.md)
