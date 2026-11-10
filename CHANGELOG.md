@@ -13,6 +13,9 @@ All notable changes to this project are recorded here, in the
 
 ## Unreleased
 
+- The local uv floor is now 0.13.7, CI's pinned uv, replacing the 0.13.6 floor in an earlier
+  bullet. CI fails when the floor and CI's uv version differ. A contributor needs uv 0.13.7 or
+  newer.
 - `generate-resume` now reports a document it was meant to write but did not find as not found,
   and fails the run for it. It used to report that document as one whose page count could not be
   measured.

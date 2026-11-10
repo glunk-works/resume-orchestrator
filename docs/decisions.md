@@ -270,7 +270,7 @@ vocabularies* table keeps the product's run orchestration apart from the dev wor
 
 ## RO-D20 — The toolchain moves from Hatch to uv
 
-*Decided 2026-11-07 (maintainer).*
+*Decided 2026-11-07 (maintainer). Partly superseded by RO-D23 for the local uv floor.*
 uv manages the project environment, the lock file (`uv.lock`, committed) and command running
 (`uv run`), and `uv_build` replaces `hatchling` as the build backend. Hatch is no longer used. The
 move lands in its own task, after which `RO-D19`'s package rename follows.
@@ -492,3 +492,15 @@ D5's render stage also fails the run when a page count cannot be measured, and D
 file naming and handling. This extends plan §3.9's rule that render fails loudly when neither
 converter works to every failed count. **Why:** a zero exit reports a finished run although a
 document's page count was not produced, so its length limit could not be checked.
+
+## RO-D23 — The local uv floor equals CI's pinned uv
+
+*Decided 2026-11-10 (maintainer).*
+The `required-version` floor under `[tool.uv]` in `pyproject.toml` must be exactly `>=` followed by
+the uv version CI pins (`UV_VERSION`), which is also the `uv_build` pin. `check_uv_pin.py` enforces
+it in CI, and refuses a `uv.toml` beside `pyproject.toml`, which uv reads in place of `[tool.uv]`.
+Every `UV_VERSION` bump now also raises the floor, so it needs a dev image whose uv meets it. No
+automated check ties the dev image's uv to the floor, because CI checks only its own uv, so the
+code owner confirms the image's uv before approving a change to the floor or to the image's FROM
+line. This supersedes the part of `RO-D20` that set the floor below CI's pin.
+**Why:** a local uv older than CI's can write a lock or a build that CI's uv would not.
