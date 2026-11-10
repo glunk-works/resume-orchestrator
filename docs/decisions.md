@@ -317,8 +317,8 @@ until the reviewer App posts a fresh-session review that passes on its current h
   `architect-review`, triggered on `code_paths`. `CLAUDE.md` joins `code_paths`, because it
   changes agent behaviour as much as `.claude/` does. `agents.diff_rule` stays: it selects critics
   for the pre-PR pass and covers `docs/` and other paths outside `code_paths`.
-- **Two branch rulesets:** `main-required-checks` keeps the status checks, all pinned to GitHub Actions
-  (15368), and `architect-review` is added to it. The maintainer added it to
+- **Two branch rulesets:** `main-required-checks` keeps the status checks, all pinned to GitHub
+  Actions (15368), and `architect-review` is added to it. The maintainer added it to
   `main-required-checks` themselves, by hand, with a `gh` login that holds admin rights on the
   repo, not through any Claude Code session, by 2026-11-09. `main-code-owner-approval` holds the
   code owner's approval, with no bypass actor: code-owner review, stale reviews dismissed on push, and
@@ -457,7 +457,8 @@ Residuals:
     installation tokens already minted stay valid for up to an hour), and the runs, deployments
     and releases since the mint are reviewed, with the release App's `v` tag and branch activity.
     Actions counts, as a precaution, although a token with it cannot read the key (a dispatch of
-    `release.yml` still waits on the `release` environment's review): it can delete workflow runs and their logs, part of the record that review of runs,
+    `release.yml` still waits on the `release` environment's review): it can delete workflow runs
+    and their logs, part of the record that review of runs,
     deployments and releases reads. A token minted with `--perms` for `contents`,
     `pull_requests` and `workflows` write, as the cutover PR's token was, holds none of the three.
     It can reach the same deletions (the Actions point below), and this entry leaves open
