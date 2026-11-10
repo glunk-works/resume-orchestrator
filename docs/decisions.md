@@ -317,7 +317,7 @@ until the reviewer App posts a fresh-session review that passes on its current h
   `architect-review`, triggered on `code_paths`. `CLAUDE.md` joins `code_paths`, because it
   changes agent behaviour as much as `.claude/` does. `agents.diff_rule` stays: it selects critics
   for the pre-PR pass and covers `docs/` and other paths outside `code_paths`.
-- **Two rulesets:** `main-required-checks` keeps the status checks, all pinned to GitHub Actions
+- **Two branch rulesets:** `main-required-checks` keeps the status checks, all pinned to GitHub Actions
   (15368), and `architect-review` is added to it. The maintainer added it to
   `main-required-checks` themselves, by hand, with a `gh` login that holds admin rights on the
   repo, not through any Claude Code session, by 2026-11-09. `main-code-owner-approval` holds the
@@ -379,13 +379,12 @@ Residuals:
 - While a `glunk-admin` token is live, it can push to or delete any branch but `main` and create
   tags other than the `v` tags `RO-D18` reserves. It can create, edit or delete releases on any
   tag, release assets included, and push a branch workflow that declares any write permission a
-  job can request for itself: `statuses`, `contents`, `id-token` and `actions` among them. That
-  workflow could post the `architect-review` context, push as `github-actions[bot]`, mint OIDC
-  tokens and attestations under this repo, or use `actions` write as the Actions point below
-  describes. The code
-  owner's approval bounds only what merges. A short-lived token, revoked after use, with no dev or
-  review container running meanwhile, bounds the rest, with two exceptions. A workflow PR's own
-  workflows run on `pull_request`, so it can post `architect-review` (for instance from a job of
+  job can request for itself: `statuses`, `contents` and `id-token` among them. That workflow
+  could post the `architect-review` context, push as `github-actions[bot]`, mint OIDC tokens and
+  attestations under this repo, or use `actions` write as the Actions point below describes. The
+  code owner's approval bounds only what merges. A short-lived token, revoked after use, with no
+  dev or review container running meanwhile, bounds the rest, with two exceptions. A workflow PR's
+  own workflows run on `pull_request`, so it can post `architect-review` (for instance from a job of
   that name with no permissions), and the edited workflow keeps posting after the token is revoked.
   On a PR that adds or edits a workflow, `architect-review` is therefore not evidence of a review:
   before approving, the maintainer confirms the `glunk-review[bot]` review on the head. The other
@@ -406,7 +405,7 @@ Residuals:
     write paths that outlive the token. It could rename, transfer, delete or make private the
     repo, and turn off secret scanning's push protection. The daily `ruleset-drift` workflow sees
     none of the environment, write-path or tag-ruleset changes, and little of the branch-ruleset
-    ones (the drift residual below).
+    ones (the ruleset-drift residual below).
     A read at one moment cannot show a ruleset, `main` or a `v` tag that was changed and put back,
     and an environment has no history endpoint (the release-environment rule below). So after each
     token the maintainer reads back what Administration can change, including:
@@ -453,12 +452,12 @@ Residuals:
     though the web UI's audit log may. A branch workflow with `environment: release` could read
     the release App key meanwhile. So, as a rule (the maintainer confirmed it as policy on
     2026-11-09), a token minted with Administration, Environments or Actions is treated as exposing
-    that key: the key is rotated (the old key is
-    deleted, because a new one does not revoke it, and installation tokens already minted stay
-    valid for up to an hour), and the runs, deployments and releases since the mint are reviewed,
-    with the release App's `v` tag and branch activity. Actions counts although a token with it
-    cannot read the key (a dispatch of `release.yml` still waits on the `release` environment's
-    review): it can delete workflow runs and their logs, part of the record that review of runs,
+    that key: the key is rotated (the new key replaces the `RELEASE_APP_PRIVATE_KEY` secret in the
+    `release` environment, the old key is deleted, because a new one does not revoke it, and
+    installation tokens already minted stay valid for up to an hour), and the runs, deployments
+    and releases since the mint are reviewed, with the release App's `v` tag and branch activity.
+    Actions counts, as a precaution, although a token with it cannot read the key (a dispatch of
+    `release.yml` still waits on the `release` environment's review): it can delete workflow runs and their logs, part of the record that review of runs,
     deployments and releases reads. A token minted with `--perms` for `contents`,
     `pull_requests` and `workflows` write, as the cutover PR's token was, holds none of the three.
     It can reach the same deletions (the Actions point below), and this entry leaves open
