@@ -382,6 +382,27 @@ def test_main_exits_non_zero_when_a_page_count_is_unavailable(
     assert not hasattr(record, "reason")
 
 
+def test_main_exits_non_zero_when_an_expected_document_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    from resume_optimizer import generate
+
+    def boom() -> None:
+        raise generate.MissingDocumentError("Not found: Cover letter.")
+
+    monkeypatch.setattr(generate, "_main", boom)
+    with caplog.at_level("ERROR"), pytest.raises(SystemExit) as info:
+        generate.main()
+    assert info.value.code == 1
+    assert "Not found: Cover letter." in capsys.readouterr().err
+    (record,) = [r for r in caplog.records if r.levelname == "ERROR"]
+    assert record.getMessage() == "An expected document was not found."
+    assert not hasattr(record, "document")
+    assert not hasattr(record, "reason")
+
+
 def test_generate_collateral_raises_when_a_page_count_is_unavailable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -395,6 +416,7 @@ def test_generate_collateral_raises_when_a_page_count_is_unavailable(
     _stand_in_run(monkeypatch, fail)
     with pytest.raises(generate.PageCountUnavailableError) as info:
         generate.generate_collateral("req text")
+    assert not isinstance(info.value, generate.MissingDocumentError)
     run = _run_dir()
     assert sorted(p.suffix for p in run.glob("*.docx")) == [".docx", ".docx"]
     assert not list(run.glob("*REFUSED*"))
@@ -476,7 +498,8 @@ def test_print_page_counts_reports_a_missing_document(
     assert counts.refused == []
     assert counts.unavailable == []
     out = capsys.readouterr().out
-    assert "Resume: page count unavailable (the document was not found)." in out
+    assert "Resume: not found." in out
+    assert "page count unavailable" not in out
     assert str(doc) not in out
 
 
@@ -490,7 +513,7 @@ def test_generate_collateral_fails_when_an_expected_document_was_not_written(
 
     _stand_in_run(monkeypatch, lambda path: 1)
     monkeypatch.setattr(generate.pypandoc, "convert_file", _skip_cover_letter)
-    with caplog.at_level("ERROR"), pytest.raises(generate.PageCountUnavailableError) as info:
+    with caplog.at_level("ERROR"), pytest.raises(generate.MissingDocumentError) as info:
         generate.generate_collateral("req text")
     message = str(info.value)
     assert "Cover letter" in message
@@ -500,8 +523,8 @@ def test_generate_collateral_fails_when_an_expected_document_was_not_written(
     assert len(list(run.glob("*.docx"))) == 1
     out = capsys.readouterr().out
     assert "Resume: 1 page(s)" in out
-    (line,) = [ln for ln in out.splitlines() if ln.startswith("Cover letter: page count")]
-    assert "the document was not found" in line
+    (line,) = [ln for ln in out.splitlines() if ln.startswith("Cover letter:")]
+    assert line == "Cover letter: not found."
     assert "CoverLetter" not in line
     assert str(run) not in line
     (record,) = [r for r in caplog.records if r.getMessage() == "Document not found."]
@@ -523,7 +546,7 @@ def test_a_refusal_wins_over_a_missing_document(
         generate.generate_collateral("req text")
     assert len(list(_run_dir().glob("*Resume*.REFUSED.docx"))) == 1
     out = capsys.readouterr().out
-    assert "Cover letter: page count unavailable (the document was not found)." in out
+    assert "Cover letter: not found." in out
     assert not list(_run_dir().glob("*CoverLetter*"))
 
 
@@ -547,7 +570,7 @@ def test_generate_collateral_reports_missing_and_unmeasured_together(
 
     _stand_in_run(monkeypatch, fail)
     monkeypatch.setattr(generate.pypandoc, "convert_file", _skip_cover_letter)
-    with pytest.raises(generate.PageCountUnavailableError) as info:
+    with pytest.raises(generate.MissingDocumentError) as info:
         generate.generate_collateral("req text")
     message = str(info.value)
     assert message.startswith("Not found: Cover letter. ")

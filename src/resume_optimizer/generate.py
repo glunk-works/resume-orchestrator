@@ -56,7 +56,14 @@ class RefusedDocumentError(RuntimeError):
 class PageCountUnavailableError(RuntimeError):
     """A document's page count could not be measured, so its length limit was not checked.
 
-    Also raised when an expected document was not found when page counts were taken.
+    `MissingDocumentError` covers the case where an expected document was not found.
+    """
+
+
+class MissingDocumentError(PageCountUnavailableError):
+    """An expected document was not found when page counts were taken.
+
+    Its length limit was not checked.
     """
 
 
@@ -314,7 +321,7 @@ def print_page_counts(documents: dict[str, Path]) -> PageCounts:
     for label, path in documents.items():
         if not path.exists():
             logger.error("Document not found.", extra={"document": label})
-            print(f"{label}: page count unavailable (the document was not found).")
+            print(f"{label}: not found.")
             missing.append(label)
             continue
         try:
@@ -472,8 +479,9 @@ def generate_collateral(
     Raises:
         DataPathRefusedError: If a data path resolves inside a checkout of this repository.
         RefusedDocumentError: If a generated document was refused and set aside.
-        PageCountUnavailableError: If no refused document, but an expected document was not
-            found or a page count could not be measured.
+        MissingDocumentError: If no refused document, but an expected document was not found.
+        PageCountUnavailableError: If no refused or missing document, but a page count could
+            not be measured.
     """
     paths.runs_dir()  # refuse a bad runs path before any provider call; the mkdir stays lazy
     # 1. Initialize our decoupled engine
@@ -796,6 +804,8 @@ def generate_collateral(
                 "aside, but their page count could not be measured; the line printed above for "
                 "each document gives the reason. Measuring needs Microsoft Word or LibreOffice."
             )
+        if counts.missing:
+            raise MissingDocumentError(" ".join(parts))
         raise PageCountUnavailableError(" ".join(parts))
     return out_dir
 
@@ -859,6 +869,10 @@ def main() -> None:
         _main()
     except RefusedDocumentError as exc:
         logger.error("A generated document was refused.")
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(1)
+    except MissingDocumentError as exc:
+        logger.error("An expected document was not found.")
         print(f"ERROR: {exc}", file=sys.stderr)
         sys.exit(1)
     except PageCountUnavailableError as exc:
