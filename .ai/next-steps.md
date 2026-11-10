@@ -1,27 +1,31 @@
 # Next steps
 
-**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. No lanes in flight,
-and no open task on the milestone can run as one. Its build order and **Lanes:** line say what
-each open item waits on.
+**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. No lanes in flight.
+#151 is the next build; its spec comment awaits the maintainer's reaction.
 
 **Just done:**
-- Driver session on **opus**. Specs for #182, #187 and #190 drafted in host spec sessions,
-  reviewed by the driver against the spec commit, and approved by the maintainer.
-- Three parallel lanes built them: #195 (485f630, #182), #193 (711ce8a, #187) and #194 (dec0d1a,
-  #190). #193 and #195 passed the fresh-session architect review with no findings; #194 touched
-  no `code_paths`. All three merged, their issues closed, and their lanes were cleaned up.
-- Milestone 2's **Lanes:** line now records that no lane is in flight.
-- No code was written in this session, so it had no critic pass of its own.
+- The maintainer ran #151's audit-log check on a throwaway repo and relayed the result to
+  glunk-works/claude-workbench#1414 (2026-11-10).
+- Architect session on **opus** drafted #151's spec and posted it as `glunk-dev[bot]` (a
+  `spec-task:` comment). Its spec-mode critic pass (`architect`, `docs-consistency`): 2 rounds,
+  converged. The maintainer chose the scoped `RO-D18` wording on a trust-boundary finding.
+- No code was written in this session.
 
-**Next:** in a driver session on **opus**: S02 has no lane-buildable task. #191 edits a workflow
-file, so it waits for the host workflow session that builds #152 and #171, which stay blocked on
-glunk-works/claude-workbench#1413 and #1379; #149 is blocked on #1414; #151 is the maintainer's
-audit-log check, its result relayed to claude-workbench#1414. When one unblocks, draft its spec or
-start that host session. This line carries no `task #N —` token on purpose, so resume waits.
+**Next:** task #151 — on **sonnet**, in a fresh session, once a maintainer has reacted to its
+`spec-task:` comment: build it from that comment alone on branch
+`docs/151-audit-log-default-branch`, run the green gate and `/way-of-working:critic-gate`
+(`architect`, `security-critic`, `docs-consistency`, by rule), then `/way-of-working:ship` with
+the trailers `Closes: #151` and `Decision: RO-D21`. Never merge. Still blocked: #149 on
+glunk-works/claude-workbench#1414; #152 and #171 on claude-workbench#1413 and #1379; #191 waits
+for the host workflow session that builds #152 and #171.
 
-**HITL Gate: NONE OPEN** — next gate: the maintainer relays the 151 audit-log result, or an upstream plugin fix unblocks 152, 171 and 149
+**HITL Gate: NONE OPEN** — next gate: the maintainer reacts to the spec comment on 151, then approves and merges the docs PR that builds it
 
 **Open for the owner (non-blocking):**
+- Tightenings #151's spec critics raised and the spec left out: in the new `RO-D18` residual,
+  "the residual above" names the dispatch-and-approve bullet, where "another instance of plan
+  §5's accepted residual, like the bullet above" is exact; ruleset deletion is caught by the
+  read-back's by-id list, not its history; and a numeric width cap (99) with a runnable check.
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
   GitHub repo description). Pick an owner.
 - `RO-D18` covers tags but not release assets: an account with write access can replace a
