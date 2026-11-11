@@ -230,6 +230,13 @@ Residuals:
 - A process running as the maintainer can dispatch and approve a release, an instance of plan §5's
   accepted residual. The `CLAUDE.md` clause and the `gh workflow run` deny rules in
   `.claude/settings.json` are conventions against it, not controls.
+- A `v` tag that is moved and put back leaves no trace in the activity endpoint, which documents
+  branch refs only, or in the org audit log, which shows no ref changes on this plan (#151).
+  `protected-release-tags` is set with no bypass actor, so a move needs that ruleset changed or
+  deleted first. After each token with Administration, `RO-D21`'s read-back shows a change in that
+  ruleset's history, and a deletion in its list of the rulesets by name and id. One made with the
+  maintainer's own admin rights is another instance of plan §5's accepted residual, like the bullet
+  above.
 
 ## RO-D19 — The project is renamed resume-orchestrator
 
@@ -419,9 +426,13 @@ Residuals:
       leaves no ruleset history, and a matching head for `main` proves nothing by itself: the
       activity for `refs/heads/main` (`GET repos/glunk-works/resume-orchestrator/activity?ref=...`)
       shows only the maintainer's approved merges, the default branch was not changed during the
-      token's life (the web UI's audit log; the REST endpoint is unavailable on this plan), no `v`
-      tag was added that the maintainer did not release, and every `v` tag is still at its release
-      commit;
+      token's life (the org audit log in the web UI, searched for
+      `action:repo.update_default_branch repo:glunk-works/resume-orchestrator` and for
+      `action:repo.rename`, has no entry from that window; the REST endpoint is unavailable on this
+      plan; #151 confirmed on a throwaway repo that a change made by a user is listed with its old
+      and new branch and its actor, and did not test one made with an App installation token), no
+      `v` tag was added that the maintainer did not release, and every `v` tag is still at its
+      release commit;
     - the `release` environment's protection, the default branch, and the repo's name, owner and
       visibility;
     - the workflows, compared in both directions (`GET repos/glunk-works/resume-orchestrator/actions/workflows`)
