@@ -1,40 +1,53 @@
 # Next steps
 
-**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `implementing`. No lanes in flight.
-#151 is the next build; its spec comment awaits the maintainer's reaction.
+**Now:** Sprint S02, "Foundation and de-risk" (milestone 2), `blocked`. No lanes in flight.
+Every open S02 task waits on an upstream blocker.
 
 **Just done:**
-- The maintainer ran #151's audit-log check on a throwaway repo and relayed the result to
-  glunk-works/claude-workbench#1414 (2026-11-10).
-- Architect session on **opus** drafted #151's spec and posted it as `glunk-dev[bot]` (a
-  `spec-task:` comment). Its spec-mode critic pass (`architect`, `docs-consistency`): 2 rounds,
-  converged. The maintainer chose the scoped `RO-D18` wording on a trust-boundary finding.
-- No code was written in this session.
+- #151 built and merged: PR #198 (922b3ac) records the audit-log probe result in `RO-D21`
+  and a moved-`v`-tag residual in `RO-D18`. #151 is closed.
+- The first spec comment's lane stopped on critic defects in spec-mandated wording (a ruleset
+  deletion, and an untested App-token case). The driver put corrected wording in #151's body,
+  the old comment was deleted, and a new spec comment (6796503971) was drafted and approved.
+- Lane critic pass on #198 (`architect`, `security-critic`, `docs-consistency`, by rule):
+  1 round, converged, tightenings only. The `architect-review` gate was exempt (no
+  `code_paths`).
 
-**Next:** task #151 — on **sonnet**, in a fresh session, once a maintainer has reacted to its
-`spec-task:` comment: build it from that comment alone on branch
-`docs/151-audit-log-default-branch`, run the green gate and `/way-of-working:critic-gate`
-(`architect`, `security-critic`, `docs-consistency`, by rule), then `/way-of-working:ship` with
-the trailers `Closes: #151` and `Decision: RO-D21`. Never merge. Still blocked: #149 on
-glunk-works/claude-workbench#1414; #152 and #171 on claude-workbench#1413 and #1379; #191 waits
-for the host workflow session that builds #152 and #171.
+**Next:** on **opus**: S02 has no buildable task. #149 waits on
+glunk-works/claude-workbench#1414, #152 and #171 on claude-workbench#1413 and #1379, and #191
+on the host workflow session that builds #152 and #171. Check those upstream issues; when one
+clears, draft the unblocked task's spec with `/way-of-working:spec-task`, or the maintainer
+pulls work forward from a later milestone.
 
-**HITL Gate: NONE OPEN** — next gate: the maintainer reacts to the spec comment on 151, then approves and merges the docs PR that builds it
+**HITL Gate: NONE OPEN** — next gate: the maintainer picks the next task once an upstream blocker clears
 
 **Open for the owner (non-blocking):**
-- Tightenings #151's spec critics raised and the spec left out: in the new `RO-D18` residual,
-  "the residual above" names the dispatch-and-approve bullet, where "another instance of plan
-  §5's accepted residual, like the bullet above" is exact; ruleset deletion is caught by the
-  read-back's by-id list, not its history; and a numeric width cap (99) with a runnable check.
+- Follow-ups from #151 (PR #198), none applied:
+  - The repo does not record the ids of `RO-D18`'s two tag rulesets, so the read-back's check
+    of the rulesets by name and id relies on ids kept elsewhere.
+  - `RO-D21`'s key-rotation step reviews the release App's "`v` tag activity", while the new
+    `RO-D18` residual says the activity endpoint does not show `v` tags. Say where it is read.
+  - A branch-rename route (rename `main` away, release from a new unprotected `main`) is not
+    named; the `release` approval and the `refs/heads/main` activity check limit it. A
+    possible `RO-D21` residual. A repo transfer out and back (`repo.transfer`) is not searched.
+  - The `Decision: RO-D21` trailer is missing from squash commit 922b3ac: the repo builds the
+    squash message from the commits (`COMMIT_MESSAGES`), and the lane's commit carried only
+    `Closes:`. A spec or lane prompt should name every trailer the commit needs.
+- Plugin observations from #151's lanes, worth upstream issues on claude-workbench:
+  - Under the identities map the critics ran `gh issue view` with the body and every comment,
+    so they judged against text no maintainer reacted to. The builder rule does not bind them.
+  - The second lane's three critic transcripts end at a tool result with no final report
+    saved, so the critic pass cannot be audited from the transcripts.
+  - The first lane's critics found defects in spec-mandated wording; a lane cannot fix those,
+    and redrafting needed the old comment unreacted (then deleted) and the issue body edited.
 - Neither #117 nor #118 owns the project's display title (`CLAUDE.md` and readme headings, the
   GitHub repo description). Pick an owner.
 - `RO-D18` covers tags but not release assets: an account with write access can replace a
   published release's assets, and the trust root is now an org. Worth a residual line in `RO-D18`.
 - `RO-D20`'s residual says the wheel is built "in a job that uses uv's cache", but every
   `setup-uv` step sets `enable-cache: false`. Correct the entry (it belongs to #112).
-- The `RO-D21` read-back list names the auto-merge setting but not its intended value. Record
-  `true` as the baseline, and that the maintainer changed `main-required-checks` by hand with the
-  admin `gh`, which `RO-D21` says a host session does not do.
+- Record in `RO-D21` that the maintainer changed `main-required-checks` by hand with the admin
+  `gh`, which `RO-D21` says a host session does not do.
 - After `RO-D17`, the plan header's "`RO-D1`..`RO-D16`" range and §3.8's subscription sentence are
   stale for `support` mode (the spec kept them unchanged). D1's spec should pick up three things:
   re-run B6 items 1, 4, 7 and 9 under `--bare`, pass the API key only to the `support` child, and
